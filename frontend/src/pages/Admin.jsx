@@ -142,20 +142,20 @@ function AdminBoard() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-100 dark:bg-stone-950 text-stone-900 dark:text-stone-100 transition-colors duration-150">
-      <header className="border-b border-stone-200 dark:border-stone-850 bg-white dark:bg-stone-900 px-6 py-4">
+    <div className="min-h-screen bg-cream-50 dark:bg-espresso-950 text-chocolate-900 dark:text-[#f7f3ec] transition-colors duration-150">
+      <header className="border-b border-cream-200 dark:border-espresso-800 bg-white dark:bg-espresso-900/90 px-6 py-4 backdrop-blur-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img
               src="/logo.png"
               alt="Logo"
-              className="h-10 w-10 rounded-full"
+              className="h-10 w-10 rounded-full object-cover ring-2 ring-gold-500/40 bg-white"
             />
             <div>
-              <h1 className="text-xl font-bold text-purple-900 dark:text-purple-400">
+              <h1 className="font-serif text-lg font-bold text-chocolate-900 dark:text-white tracking-wide">
                 Admin Management Center
               </h1>
-              <p className="text-sm text-stone-500 dark:text-stone-400">
+              <p className="text-xs uppercase tracking-wider text-gold-500 font-medium">
                 Revenue · Floor speed · AI sentiment
               </p>
             </div>
@@ -163,16 +163,19 @@ function AdminBoard() {
           <div className="flex items-center gap-3">
             <button
               onClick={toggleTheme}
-              className={`rounded-full px-3 py-2 text-sm font-medium ${isDark ? "bg-stone-800 text-stone-100" : "bg-stone-100 text-stone-700"}`}
+              className="rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider bg-cream-100 dark:bg-espresso-800 border border-cream-200 dark:border-espresso-700 text-chocolate-850 dark:text-espresso-50 hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               {isDark ? "☀️ Light" : "🌙 Dark"}
             </button>
             <button
               onClick={logout}
-              className="text-sm text-stone-500 dark:text-stone-400 hover:text-red-600 dark:hover:text-red-400"
+              className="rounded-lg bg-red-500/10 hover:bg-red-500/25 px-4 py-2 text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400 transition-all cursor-pointer"
             >
               Logout
             </button>
+            <Link to="/" className="rounded-lg border border-gold-500 px-4 py-2 text-xs font-bold uppercase tracking-wider text-gold-500 hover:bg-gold-500 hover:text-white transition-all cursor-pointer">
+              ← Home
+            </Link>
           </div>
         </div>
       </header>

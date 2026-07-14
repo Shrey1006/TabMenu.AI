@@ -195,19 +195,19 @@ export default function TableGuest() {
       className={`min-h-screen transition-colors ${isDark ? "bg-stone-950 text-stone-100" : "bg-stone-50 text-stone-800"}`}
     >
       <header
-        className={`border-b ${isDark ? "border-stone-800 bg-stone-900/90" : "border-stone-200 bg-white/90"}`}
+        className="border-b border-cream-200 dark:border-espresso-800 bg-white dark:bg-espresso-900/90 backdrop-blur-md transition-colors"
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
             <img
-              src={isDark ? "/logo-night.svg" : "/logo.png"}
+              src="/logo.png"
               alt="Ambika logo"
-              className="h-12 w-12 rounded-full object-cover"
+              className="h-12 w-12 rounded-full object-cover ring-2 ring-gold-500/40 bg-white"
             />
             <div>
-              <p className="text-lg font-bold">Ambika Pure Veg</p>
+              <p className="font-serif text-lg font-bold tracking-wide text-chocolate-900 dark:text-white">Ambika Pure Veg</p>
               <p
-                className={`text-sm ${isDark ? "text-stone-400" : "text-stone-500"}`}
+                className="text-xs uppercase tracking-wider text-gold-500 font-medium"
               >
                 Table {tableNumber}
               </p>
@@ -216,13 +216,13 @@ export default function TableGuest() {
           <div className="flex items-center gap-3">
             <button
               onClick={toggleTheme}
-              className={`rounded-full px-3 py-2 text-sm font-medium ${isDark ? "bg-stone-800 text-stone-100" : "bg-stone-100 text-stone-700"}`}
+              className="rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider bg-cream-100 dark:bg-espresso-800 border border-cream-200 dark:border-espresso-700 text-chocolate-850 dark:text-espresso-50 hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               {isDark ? "☀️ Light" : "🌙 Dark"}
             </button>
             <Link
               to="/"
-              className={`text-sm font-medium ${isDark ? "text-stone-300" : "text-stone-600"}`}
+              className="rounded-lg border border-gold-500 px-4 py-2 text-xs font-bold uppercase tracking-wider text-gold-500 hover:bg-gold-500 hover:text-white transition-all cursor-pointer"
             >
               Back Home
             </Link>
