@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
-import api from "../lib/api";
+import api from "../lib/api.js";
 import { useTheme } from "../context/ThemeContext";
 
 const initialForm = {

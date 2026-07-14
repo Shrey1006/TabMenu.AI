@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { QRCodeCanvas } from "qrcode.react";
-import api from "../lib/api";
+import api from "../lib/api.js";
 import { useAuth } from "../context/AuthContext";
 import { SocketProvider, useSocket } from "../context/SocketContext";
 
