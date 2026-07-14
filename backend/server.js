@@ -78,7 +78,13 @@ app.use(express.json());
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', service: 'Ambika Pure Veg API' });
 });
-
+app.get("/", (_req, res) => {
+  res.json({
+    status: "ok",
+    service: "Ambika API - root",
+    message: "Use /api routes",
+  });
+});
 app.use('/api/auth', authRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/tables', tableRoutes);
