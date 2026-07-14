@@ -1,23 +1,83 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import api from "../lib/api.js";
 import { SocketProvider, useSocket } from "../context/SocketContext";
 import { useTheme } from "../context/ThemeContext";
 
+// Reusable components
+import MenuCard from "../components/MenuCard";
+import CategoryAccordion from "../components/CategoryAccordion";
+import CartDrawer from "../components/CartDrawer";
+import CheckoutModal from "../components/CheckoutModal";
+import PaymentSuccess from "../components/PaymentSuccess";
+
 function CustomerApp({ qrToken, tableNumber }) {
   const socket = useSocket();
   const { isDark, toggleTheme } = useTheme();
+  
+  // State variables
   const [menu, setMenu] = useState([]);
   const [cart, setCart] = useState([]);
   const [order, setOrder] = useState(null);
-  const [filter, setFilter] = useState("all");
+  
+  // Search & Filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilters, setActiveFilters] = useState({
+    veg: false,
+    nonVeg: false,
+    jain: false,
+    bestseller: false,
+    spicy: false,
+    availableOnly: false,
+    priceSort: "", // "asc" | "desc" | ""
+  });
+
+  // UI state
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isOrderConfirmOpen, setIsOrderConfirmOpen] = useState(false);
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [paymentCompletedOrder, setPaymentCompletedOrder] = useState(null);
   const [feedback, setFeedback] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [toastMsg, setToastMsg] = useState("");
+
+  // Category Accordion open states
+  const [openCategories, setOpenCategories] = useState({
+    "Starters": true,
+    "Main Course": true,
+    "Breads": true,
+    "Desserts": true,
+    "Beverages": true,
+  });
+
+  const showToast = (msg) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(""), 3500);
+  };
+
+  const loadMenu = () => {
+    api.get("/menu")
+      .then((r) => setMenu(r.data))
+      .catch(() => showToast("Failed to retrieve menu specialties."));
+  };
 
   useEffect(() => {
-    api.get("/menu").then((r) => setMenu(r.data));
+    loadMenu();
   }, []);
+
+  // Fetch active order for this table on load (in case they reload page after ordering)
+  useEffect(() => {
+    if (tableNumber) {
+      api.get("/orders/active")
+        .then((res) => {
+          const tableOrder = res.data.find((o) => String(o.tableNumber) === String(tableNumber));
+          if (tableOrder) setOrder(tableOrder);
+        })
+        .catch(() => {});
+    }
+  }, [tableNumber]);
 
   useEffect(() => {
     if (!socket || !tableNumber) return;
@@ -32,79 +92,203 @@ function CustomerApp({ qrToken, tableNumber }) {
     };
   }, [socket, tableNumber]);
 
+  // Cart operations
   const addToCart = (item) => {
     setCart((prev) => {
       const existing = prev.find((c) => c.menuItemId === item._id);
       if (existing) {
         return prev.map((c) =>
-          c.menuItemId === item._id ? { ...c, quantity: c.quantity + 1 } : c,
+          c.menuItemId === item._id ? { ...c, quantity: c.quantity + 1 } : c
         );
       }
-      return [...prev, { menuItemId: item._id, quantity: 1, notes: "" }];
+      return [...prev, { menuItemId: item._id, quantity: 1, name: item.name, price: item.price, notes: "" }];
     });
+    showToast(`Added ${item.name} to basket.`);
   };
 
-  const placeOrder = async () => {
-    if (!cart.length) return;
-    setLoading(true);
+  const removeFromCart = (item) => {
+    setCart((prev) => {
+      const existing = prev.find((c) => c.menuItemId === item._id);
+      if (existing && existing.quantity > 1) {
+        return prev.map((c) =>
+          c.menuItemId === item._id ? { ...c, quantity: c.quantity - 1 } : c
+        );
+      }
+      return prev.filter((c) => c.menuItemId !== item._id);
+    });
+    showToast(`Removed ${item.name} from basket.`);
+  };
+
+  const clearCart = () => {
+    setCart([]);
+    showToast("Basket cleared.");
+  };
+
+  const callWaiter = async () => {
+    if (!order) return;
     try {
-      const { data } = await api.post("/orders", { qrToken, items: cart });
-      setOrder(data);
+      await api.post(`/orders/${order._id}/call-waiter`);
+      showToast("🛎️ Waiter notified! Assistance is on the way.");
+    } catch {
+      showToast("Unable to notify waiter. Please request help directly.");
+    }
+  };
+
+  const submitFeedback = async () => {
+    if (!feedback.trim()) return;
+    try {
+      await api.post("/feedback", {
+        qrToken,
+        text: feedback,
+        orderId: order?._id,
+      });
+      setFeedbackSent(true);
+      setFeedback("");
+      showToast("Thank you for your valuable feedback!");
+    } catch {
+      showToast("Failed to submit feedback.");
+    }
+  };
+
+  // Live filter and search logic
+  const filteredMenu = useMemo(() => {
+    let result = [...menu];
+
+    // Search query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (m) =>
+          m.name.toLowerCase().includes(q) ||
+          m.category.toLowerCase().includes(q) ||
+          m.description.toLowerCase().includes(q)
+      );
+    }
+
+    // Filter Badges
+    if (activeFilters.veg) result = result.filter((m) => m.veg);
+    if (activeFilters.nonVeg) result = result.filter((m) => m.nonVeg);
+    if (activeFilters.jain) result = result.filter((m) => m.jain);
+    if (activeFilters.bestseller) result = result.filter((m) => m.bestseller);
+    if (activeFilters.spicy) result = result.filter((m) => m.spiceLevel === "high");
+    if (activeFilters.availableOnly) result = result.filter((m) => m.available);
+
+    // Price Sorting
+    if (activeFilters.priceSort === "asc") {
+      result.sort((a, b) => a.price - b.price);
+    } else if (activeFilters.priceSort === "desc") {
+      result.sort((a, b) => b.price - a.price);
+    } else {
+      // Default to display order
+      result.sort((a, b) => a.displayOrder - b.displayOrder);
+    }
+
+    return result;
+  }, [menu, searchQuery, activeFilters]);
+
+  // Group items by category
+  const groupedMenu = useMemo(() => {
+    const groups = {};
+    filteredMenu.forEach((item) => {
+      const cat = item.category || "Other";
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(item);
+    });
+    return groups;
+  }, [filteredMenu]);
+
+  const cartTotal = useMemo(() => {
+    return cart.reduce((sum, c) => {
+      const item = menu.find((m) => m._id === c.menuItemId);
+      return sum + (item?.price || 0) * c.quantity;
+    }, 0);
+  }, [cart, menu]);
+
+  const toggleCategory = (cat) => {
+    setOpenCategories((prev) => ({ ...prev, [cat]: !prev[cat] }));
+  };
+
+  // Dine-in order placing flow (send to kitchen first)
+  const handleConfirmOrder = async (customerDetails) => {
+    setLoading(true);
+    setIsOrderConfirmOpen(false);
+    try {
+      const orderPayload = {
+        qrToken,
+        items: cart,
+        customerName: customerDetails.name,
+        customerPhone: customerDetails.phone,
+        customerNotes: `Guest: ${customerDetails.name} • Dine-In`,
+      };
+
+      const { data: newOrder } = await api.post("/orders", orderPayload);
+      setOrder(newOrder);
       setCart([]);
+      showToast("🍳 Dine-in order sent to kitchen!");
     } catch (err) {
-      alert(err.response?.data?.message || "Order failed");
+      showToast(err.response?.data?.message || "Order placement failed.");
     } finally {
       setLoading(false);
     }
   };
 
-  const callWaiter = async () => {
+  // Dine-in pay flow (Razorpay payment success)
+  const handlePaymentSuccess = async (paymentId, customerDetails) => {
     if (!order) return;
-    await api.post(`/orders/${order._id}/call-waiter`);
-    alert("Waiter has been notified!");
+    setLoading(true);
+    setIsPaymentOpen(false);
+    try {
+      const { data: paidOrder } = await api.post(`/orders/${order._id}/pay`);
+      setPaymentCompletedOrder(paidOrder);
+      setOrder(null); // Clear active order
+      showToast("💳 Bill settled via Razorpay!");
+    } catch {
+      showToast("Failed to process payment settlement.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const submitFeedback = async () => {
-    if (!feedback.trim()) return;
-    await api.post("/feedback", {
-      qrToken,
-      text: feedback,
-      orderId: order?._id,
-    });
-    setFeedbackSent(true);
-    setFeedback("");
+  const handlePaymentFailure = (errorMsg) => {
+    showToast(`❌ Payment Failed: ${errorMsg}. Please try again.`);
   };
-
-  const filtered = menu.filter((m) => {
-    if (filter === "all") return true;
-    return m.dietary?.includes(filter);
-  });
-
-  const cartTotal = cart.reduce((sum, c) => {
-    const item = menu.find((m) => m._id === c.menuItemId);
-    return sum + (item?.price || 0) * c.quantity;
-  }, 0);
 
   const statusColor = {
-    pending: "bg-yellow-100 text-yellow-800",
-    in_progress: "bg-blue-100 text-blue-800",
-    ready: "bg-green-100 text-green-800",
-    served: "bg-stone-100 text-stone-800",
-    paid: "bg-brand-100 text-brand-800",
+    pending: "bg-yellow-100 dark:bg-yellow-950/20 text-yellow-800 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-900/60",
+    in_progress: "bg-blue-100 dark:bg-blue-950/20 text-blue-800 dark:text-blue-400 border border-blue-200 dark:border-blue-900/60",
+    ready: "bg-green-100 dark:bg-green-950/20 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-900/60",
+    served: "bg-stone-100 dark:bg-stone-900 text-stone-800 dark:text-stone-300 border border-stone-200 dark:border-stone-800",
+    paid: "bg-gold-500/10 text-gold-500 border border-gold-500/20",
   };
 
   return (
-    <div className="min-h-screen bg-cream-50 dark:bg-espresso-950 text-chocolate-900 dark:text-[#f7f3ec] transition-colors duration-150">
-      <header className="border-b border-cream-200 dark:border-espresso-800 bg-white dark:bg-espresso-900/90 px-4 py-4 backdrop-blur-md">
+    <div className="min-h-screen bg-cream-50 dark:bg-espresso-950 text-chocolate-900 dark:text-[#f7f3ec] transition-colors duration-200 pb-28">
+      
+      {/* Toast Alert Banner */}
+      <AnimatePresence>
+        {toastMsg && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-6 left-6 z-50 rounded-xl bg-stone-900 text-white px-5 py-3 text-xs font-bold uppercase tracking-wider shadow-lg flex items-center gap-2 border border-stone-850"
+          >
+            🔔 {toastMsg}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Royal Header */}
+      <header className="border-b border-cream-200 dark:border-espresso-800 bg-white dark:bg-espresso-900/90 px-4 py-4 sticky top-0 z-35 backdrop-blur-md transition-colors">
         <div className="mx-auto flex max-w-4xl items-center justify-between">
           <div className="flex items-center gap-3">
             <img
               src="/logo.png"
-              alt="Logo"
+              alt="Ambika Logo"
               className="h-10 w-10 rounded-full object-cover ring-2 ring-gold-500/40 bg-white"
             />
             <div>
-              <h1 className="font-serif text-lg font-bold text-chocolate-900 dark:text-white tracking-wide">Ambika Pure Veg</h1>
+              <h1 className="font-serif text-lg font-bold tracking-wide">Ambika Pure Veg</h1>
               <p className="text-xs uppercase tracking-wider text-gold-500 font-medium">Table {tableNumber}</p>
             </div>
           </div>
@@ -122,149 +306,292 @@ function CustomerApp({ qrToken, tableNumber }) {
         </div>
       </header>
 
-      <div className="mx-auto max-w-4xl px-4 py-6">
-        {order && (
-          <div className="mb-6 rounded-xl border border-brand-200 dark:border-brand-900/60 bg-white dark:bg-stone-900 p-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-bold dark:text-stone-100">Your Order</h2>
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${statusColor[order.status] || ""}`}
+      {/* Success Page Container */}
+      <AnimatePresence>
+        {paymentCompletedOrder ? (
+          <div className="mx-auto max-w-4xl px-4 py-12 flex justify-center">
+            <PaymentSuccess
+              order={paymentCompletedOrder}
+              onClose={() => setPaymentCompletedOrder(null)}
+            />
+          </div>
+        ) : (
+          <div className="mx-auto max-w-4xl px-4 py-6 space-y-6">
+            
+            {/* Active Order Card */}
+            {order && (
+              <motion.div
+                initial={{ opacity: 0, y: -15 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-2xl border border-cream-200 dark:border-espresso-750 bg-white dark:bg-espresso-900 p-6 shadow-sm space-y-4"
               >
-                {order.status?.replace("_", " ")}
-              </span>
-            </div>
-            <ul className="mt-2 space-y-1 text-sm text-stone-600 dark:text-stone-300">
-              {order.items?.map((i, idx) => (
-                <li key={idx}>
-                  {i.quantity}x {i.name} — ₹{i.price * i.quantity}
-                </li>
-              ))}
-            </ul>
-            <p className="mt-2 font-bold dark:text-stone-100">Total: ₹{order.totalAmount}</p>
-            <div className="mt-3 flex gap-2">
-              <button
-                onClick={callWaiter}
-                className="rounded-lg bg-warm-500 px-4 py-2 text-sm font-semibold text-white"
-              >
-                Call Waiter
-              </button>
-              {order.status === "served" && (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="font-serif text-lg font-bold">Active Table Order</h2>
+                    <p className="text-xs text-stone-400">Order Ref: #{order._id?.substring(18, 24).toUpperCase()}</p>
+                  </div>
+                  <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${statusColor[order.status] || ""}`}>
+                    {order.status?.replace("_", " ")}
+                  </span>
+                </div>
+                <ul className="divide-y divide-cream-100 dark:divide-espresso-800 text-xs">
+                  {order.items?.map((i, idx) => (
+                    <li key={idx} className="py-2 flex justify-between">
+                      <span>{i.quantity}x {i.name}</span>
+                      <span className="font-bold">₹{i.price * i.quantity}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex items-center justify-between border-t border-cream-100 dark:border-espresso-800 pt-3">
+                  <p className="font-bold">Total Bill: ₹{order.totalAmount}</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={callWaiter}
+                      className="rounded-xl border border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+                    >
+                      🛎️ Call Waiter
+                    </button>
+                    {order.status !== "paid" && (
+                      <button
+                        onClick={() => setIsPaymentOpen(true)}
+                        className="rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 hover:from-gold-600 hover:to-gold-500 text-white font-bold px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shadow-md"
+                      >
+                        💳 Pay Bill (Razorpay)
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Live Search & Filter Bar */}
+            <div className="space-y-4">
+              <div className="relative">
+                <span className="absolute inset-y-0 left-4 flex items-center text-stone-400">🔍</span>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search our heritage menu (e.g. Paneer, Tandoori...)"
+                  className="w-full rounded-2xl border border-cream-200 dark:border-espresso-750 pl-10 pr-4 py-4 bg-white dark:bg-espresso-900 outline-none focus:border-gold-500 text-sm shadow-xs transition-colors"
+                />
+              </div>
+
+              {/* Filter Badges Grid */}
+              <div className="flex flex-wrap gap-2 items-center">
                 <button
-                  onClick={() => api.post(`/orders/${order._id}/pay`)}
-                  className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white"
+                  onClick={() => setActiveFilters(prev => ({ ...prev, veg: !prev.veg }))}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold border transition-all cursor-pointer ${
+                    activeFilters.veg
+                      ? "bg-green-500/10 text-green-600 border-green-500/30 font-bold"
+                      : "bg-white dark:bg-espresso-900 text-stone-500 dark:text-espresso-100 border-cream-200 dark:border-espresso-750"
+                  }`}
                 >
-                  Pay Bill
+                  🟢 Veg Only
                 </button>
+                <button
+                  onClick={() => setActiveFilters(prev => ({ ...prev, jain: !prev.jain }))}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold border transition-all cursor-pointer ${
+                    activeFilters.jain
+                      ? "bg-gold-500/10 text-gold-500 border-gold-500/30 font-bold"
+                      : "bg-white dark:bg-espresso-900 text-stone-500 dark:text-espresso-100 border-cream-200 dark:border-espresso-750"
+                  }`}
+                >
+                  🌾 Jain Options
+                </button>
+                <button
+                  onClick={() => setActiveFilters(prev => ({ ...prev, bestseller: !prev.bestseller }))}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold border transition-all cursor-pointer ${
+                    activeFilters.bestseller
+                      ? "bg-gold-500 text-white border-transparent font-bold shadow-xs"
+                      : "bg-white dark:bg-espresso-900 text-stone-500 dark:text-espresso-100 border-cream-200 dark:border-espresso-750"
+                  }`}
+                >
+                  ⭐ Bestsellers
+                </button>
+                <button
+                  onClick={() => setActiveFilters(prev => ({ ...prev, spicy: !prev.spicy }))}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold border transition-all cursor-pointer ${
+                    activeFilters.spicy
+                      ? "bg-red-500/10 text-red-600 border-red-500/30 font-bold"
+                      : "bg-white dark:bg-espresso-900 text-stone-500 dark:text-espresso-100 border-cream-200 dark:border-espresso-750"
+                  }`}
+                >
+                  🌶️ Spicy Only
+                </button>
+                <button
+                  onClick={() => setActiveFilters(prev => ({ ...prev, availableOnly: !prev.availableOnly }))}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold border transition-all cursor-pointer ${
+                    activeFilters.availableOnly
+                      ? "bg-stone-900 text-white border-transparent font-bold"
+                      : "bg-white dark:bg-espresso-900 text-stone-500 dark:text-espresso-100 border-cream-200 dark:border-espresso-750"
+                  }`}
+                >
+                  ● In Stock
+                </button>
+
+                {/* Price Sort Dropdown */}
+                <select
+                  value={activeFilters.priceSort}
+                  onChange={(e) => setActiveFilters(prev => ({ ...prev, priceSort: e.target.value }))}
+                  className="rounded-lg px-3 py-1.5 text-xs font-semibold bg-white dark:bg-espresso-900 border border-cream-200 dark:border-espresso-750 text-stone-500 dark:text-espresso-100 outline-none cursor-pointer"
+                >
+                  <option value="">Sort by Price</option>
+                  <option value="asc">Price: Low → High</option>
+                  <option value="desc">Price: High → Low</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Accordion List */}
+            <div className="rounded-2xl border border-cream-200 dark:border-espresso-800 bg-white dark:bg-espresso-900 shadow-sm overflow-hidden">
+              {Object.keys(groupedMenu).length === 0 ? (
+                <div className="p-12 text-center text-stone-400">
+                  No delicacies match your filter settings.
+                </div>
+              ) : (
+                Object.keys(groupedMenu).map((cat) => (
+                  <CategoryAccordion
+                    key={cat}
+                    category={cat}
+                    itemCount={groupedMenu[cat].length}
+                    isOpen={!!openCategories[cat]}
+                    onToggle={() => toggleCategory(cat)}
+                  >
+                    <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-2">
+                      {groupedMenu[cat].map((item) => {
+                        const inCart = cart.find((c) => c.menuItemId === item._id);
+                        return (
+                          <MenuCard
+                            key={item._id}
+                            item={item}
+                            quantity={inCart ? inCart.quantity : 0}
+                            onAdd={() => addToCart(item)}
+                            onRemove={() => removeFromCart(item)}
+                          />
+                        );
+                      })}
+                    </div>
+                  </CategoryAccordion>
+                ))
               )}
             </div>
-          </div>
-        )}
 
-        <div className="mb-4 flex flex-wrap gap-2">
-          {["all", "jain", "vegan", "gluten-free", "spicy"].map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${filter === f ? "bg-brand-600 text-white" : "bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-300 border dark:border-stone-800"}`}
-            >
-              {f === "all" ? "All Items" : f}
-            </button>
-          ))}
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          {filtered.map((item) => (
-            <div key={item._id} className="rounded-xl border border-stone-200 dark:border-stone-850 bg-white dark:bg-stone-900 p-4">
-              <div className="flex justify-between">
-                <h3 className="font-bold dark:text-stone-100">{item.name}</h3>
-                <span className="font-semibold text-brand-700 dark:text-brand-400">
-                  ₹{item.price}
-                </span>
-              </div>
-              <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">{item.description}</p>
-              <div className="mt-2 flex items-center justify-between">
-                <span className="text-xs text-stone-400 dark:text-stone-450">
-                  {item.prepTimeMinutes} min · {item.category}
-                </span>
-                <button
-                  onClick={() => addToCart(item)}
-                  className="rounded-lg bg-brand-600 px-3 py-1 text-xs font-semibold text-white"
-                >
-                  Add
-                </button>
-              </div>
+            {/* Guest Feedback Section */}
+            <div className="rounded-2xl border border-cream-200 dark:border-espresso-750 bg-white dark:bg-espresso-900 p-6 shadow-sm space-y-4">
+              <h3 className="font-serif text-lg font-bold">Feedback & Service Review</h3>
+              {feedbackSent ? (
+                <p className="text-sm text-green-600">✓ Your feedback has been sent to our hosts. Thank you!</p>
+              ) : (
+                <div className="space-y-3">
+                  <textarea
+                    rows={3}
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    placeholder="Tell us about your culinary experience..."
+                    className="w-full rounded-xl border border-cream-200 dark:border-espresso-750 p-4 bg-cream-50/20 dark:bg-espresso-950 outline-none focus:border-gold-500 text-xs"
+                  />
+                  <button
+                    onClick={submitFeedback}
+                    className="rounded-lg bg-gold-500 hover:bg-gold-600 text-white font-bold px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                  >
+                    Submit Feedback
+                  </button>
+                </div>
+              )}
             </div>
-          ))}
-        </div>
 
-        {cart.length > 0 && (
-          <div className="fixed bottom-0 left-0 right-0 border-t border-stone-200 dark:border-stone-850 bg-white dark:bg-stone-900 p-4 shadow-lg">
-            <div className="mx-auto flex max-w-4xl items-center justify-between">
-              <div>
-                <p className="font-bold">
-                  {cart.reduce((s, c) => s + c.quantity, 0)} items · ₹
-                  {cartTotal}
-                </p>
-              </div>
-              <button
-                onClick={placeOrder}
-                disabled={loading}
-                className="rounded-xl bg-brand-600 px-6 py-3 font-bold text-white disabled:opacity-50"
-              >
-                {loading ? "Placing..." : "Place Order"}
-              </button>
-            </div>
           </div>
         )}
+      </AnimatePresence>
 
-        {order && (
-          <div className="mt-8 rounded-xl border border-stone-200 dark:border-stone-850 bg-white dark:bg-stone-900 p-4">
-            <h3 className="font-bold dark:text-stone-100">Leave Feedback</h3>
-            {feedbackSent ? (
-              <p className="mt-2 text-sm text-brand-600 dark:text-brand-400">
-                Thank you! Your feedback has been analyzed by our AI engine.
-              </p>
-            ) : (
-              <>
-                <textarea
-                  value={feedback}
-                  onChange={(e) => setFeedback(e.target.value)}
-                  placeholder="How was your dining experience?"
-                  className="mt-2 w-full rounded-lg border border-stone-200 dark:border-stone-800 p-3 text-sm bg-white dark:bg-stone-850 dark:text-stone-100"
-                  rows={3}
-                />
-                <button
-                  onClick={submitFeedback}
-                  className="mt-2 rounded-lg bg-stone-800 px-4 py-2 text-sm font-semibold text-white"
-                >
-                  Submit Feedback
-                </button>
-              </>
-            )}
+      {/* Floating View Basket Sticky Bar */}
+      {cart.length > 0 && (
+        <motion.div
+          initial={{ y: 100 }}
+          animate={{ y: 0 }}
+          className="fixed bottom-0 inset-x-0 bg-white dark:bg-espresso-900 border-t border-cream-200 dark:border-espresso-800 p-4 flex items-center justify-between max-w-4xl mx-auto shadow-2xl z-38 rounded-t-3xl"
+        >
+          <div>
+            <p className="text-xs text-stone-400">Items in basket</p>
+            <p className="font-serif text-base font-bold text-gold-500">₹{cartTotal}</p>
           </div>
-        )}
-      </div>
+          <button
+            onClick={() => setIsCartOpen(true)}
+            className="rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 hover:from-gold-600 hover:to-gold-500 text-white font-bold px-6 py-3.5 text-xs uppercase tracking-wider transition-transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shadow-md"
+          >
+            View Basket ({cart.reduce((sum, c) => sum + c.quantity, 0)})
+          </button>
+        </motion.div>
+      )}
+
+      {/* Cart Slider Drawer */}
+      <CartDrawer
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        cart={cart}
+        menu={menu}
+        onAdd={addToCart}
+        onRemove={removeFromCart}
+        onClear={clearCart}
+        onCheckout={() => {
+          setIsCartOpen(false);
+          setIsOrderConfirmOpen(true); // Open order confirmation modal first!
+        }}
+        tableNumber={tableNumber}
+      />
+
+      {/* 1. Checkout Confirmation Modal (Placing order to kitchen) */}
+      <CheckoutModal
+        isOpen={isOrderConfirmOpen}
+        onClose={() => setIsOrderConfirmOpen(false)}
+        amount={cartTotal}
+        mode="order"
+        onConfirmOrder={handleConfirmOrder}
+      />
+
+      {/* 2. Checkout Payment Modal (Razorpay payment checkout) */}
+      <CheckoutModal
+        isOpen={isPaymentOpen}
+        onClose={() => setIsPaymentOpen(false)}
+        amount={
+          order
+            ? order.totalAmount +
+              Math.round(order.totalAmount * 0.05) + // GST
+              Math.round(order.totalAmount * 0.05) // Dine-in Service Charge
+            : 0
+        }
+        mode="payment"
+        onPaymentSuccess={handlePaymentSuccess}
+        onPaymentFailure={handlePaymentFailure}
+      />
+
     </div>
   );
 }
 
 export default function Customer() {
-  const { isDark, toggleTheme } = useTheme();
-  const [tableNumber, setTableNumber] = useState(null);
-  const [qrToken, setQrToken] = useState(null);
+  const query = new URLSearchParams(window.location.search);
+  const token = query.get("token") || localStorage.getItem("last-table-token") || "";
+  const tableNum = query.get("table") || localStorage.getItem("last-table-number") || "";
+
+  const [qrToken, setQrToken] = useState(token);
+  const [tableNumber, setTableNumber] = useState(tableNum ? Number(tableNum) : "");
   const [tableInput, setTableInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const { isDark, toggleTheme } = useTheme();
 
   const scanTable = async () => {
+    if (!tableInput) return;
     setLoading(true);
     try {
       const { data } = await api.get(`/tables/connect/${tableInput}`);
-      setQrToken(data.token);
       setTableNumber(data.tableNumber);
+      setQrToken(data.token);
+      localStorage.setItem("last-table-token", data.token);
+      localStorage.setItem("last-table-number", String(data.tableNumber));
     } catch {
-      alert(
-        "Could not connect to table. Ensure the table exists and backend is running.",
-      );
+      alert("Invalid table number");
     } finally {
       setLoading(false);
     }
@@ -272,42 +599,43 @@ export default function Customer() {
 
   if (!qrToken) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-brand-50 dark:bg-stone-950 px-4 relative transition-colors duration-150">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-cream-50 dark:bg-espresso-950 px-4 relative transition-colors duration-150 text-chocolate-900 dark:text-espresso-50">
         <button
           onClick={toggleTheme}
-          className={`absolute top-4 right-4 rounded-full px-3 py-2 text-sm font-medium ${isDark ? "bg-stone-800 text-stone-100" : "bg-stone-100 text-stone-700"}`}
+          className="absolute top-6 right-6 flex h-11 w-11 items-center justify-center rounded-full bg-white dark:bg-espresso-900 border border-cream-200 dark:border-espresso-750 shadow-md cursor-pointer hover:scale-105"
         >
-          {isDark ? "☀️ Light" : "🌙 Dark"}
+          {isDark ? "☀️" : "🌙"}
         </button>
         <img
           src="/logo.png"
           alt="Logo"
-          className="h-20 w-20 rounded-full shadow-lg"
+          className="h-20 w-20 rounded-full shadow-lg border border-gold-500/20 bg-white p-1"
         />
-        <h1 className="mt-6 text-2xl font-bold dark:text-stone-100">Connect to Your Table</h1>
-        <p className="mt-2 text-center text-stone-600 dark:text-stone-400">
-          Enter the table number from the QR code generated by your restaurant.
+        <h1 className="mt-6 font-serif text-3xl font-bold">Connect to Your Table</h1>
+        <p className="mt-2 text-center text-sm text-chocolate-850 dark:text-espresso-100 max-w-sm leading-relaxed">
+          Please enter the table number from your brass dining medallion or select Table 1 to connect to our kitchen.
         </p>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row w-full max-w-sm">
           <input
             type="number"
             min="1"
+            max="6"
             value={tableInput}
             onChange={(e) => setTableInput(e.target.value)}
-            placeholder="Enter table number"
-            className="rounded-lg border border-stone-200 dark:border-stone-850 px-4 py-3 bg-white dark:bg-stone-900 dark:text-stone-100"
+            placeholder="Enter table number (1-6)"
+            className="w-full rounded-xl border border-cream-200 dark:border-espresso-750 px-4 py-3 bg-white dark:bg-espresso-950 outline-none focus:border-gold-500 dark:text-stone-100 text-sm font-semibold"
           />
           <button
             onClick={scanTable}
             disabled={loading || !tableInput}
-            className="rounded-lg bg-brand-600 px-6 py-3 font-semibold text-white disabled:opacity-50"
+            className="rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 px-6 py-3 font-bold uppercase tracking-wider text-white disabled:opacity-50 shadow-md cursor-pointer text-xs"
           >
             {loading ? "Connecting..." : "Connect Table"}
           </button>
         </div>
         <Link
           to="/"
-          className="mt-6 text-sm text-stone-500 dark:text-stone-450 hover:text-brand-700 dark:hover:text-brand-400"
+          className="mt-6 text-sm font-semibold text-gold-500 hover:text-gold-650 transition-colors"
         >
           ← Back to Home
         </Link>

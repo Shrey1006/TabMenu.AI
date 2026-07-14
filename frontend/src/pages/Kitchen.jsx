@@ -75,7 +75,7 @@ function KitchenBoard() {
         </div>
       </header>
 
-      <div className="grid gap-4 p-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-3">
         {sorted.map((order) => {
           const next = nextStatus(order.status);
           const statusColors = {
@@ -86,33 +86,37 @@ function KitchenBoard() {
           return (
             <div
               key={order._id}
-              className={`rounded-xl border-l-4 bg-stone-800 p-4 ${statusColors[order.status] || "border-stone-600"}`}
+              className={`rounded-2xl border-l-4 p-5 bg-white dark:bg-espresso-900 text-chocolate-900 dark:text-espresso-50 border-y border-r border-cream-200 dark:border-espresso-750 shadow-sm ${statusColors[order.status] || "border-stone-600"}`}
             >
-              <div className="flex justify-between">
-                <h2 className="text-lg font-bold">Table {order.tableNumber}</h2>
-                <span className="text-xs uppercase text-stone-400">
+              <div className="flex justify-between items-center border-b border-cream-100 dark:border-espresso-800 pb-2">
+                <h2 className="font-serif text-lg font-bold">Table {order.tableNumber}</h2>
+                <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
+                  order.status === "pending" ? "bg-yellow-500/10 text-yellow-600" :
+                  order.status === "in_progress" ? "bg-blue-500/10 text-blue-600" :
+                  "bg-green-500/10 text-green-600"
+                }`}>
                   {order.status?.replace("_", " ")}
                 </span>
               </div>
-              <ul className="mt-3 space-y-1 text-sm">
+              <ul className="mt-3 space-y-2 text-xs">
                 {order.items?.map((i, idx) => (
                   <li key={idx} className="flex justify-between">
-                    <span>
+                    <span className="font-semibold text-chocolate-850 dark:text-espresso-100">
                       {i.quantity}x {i.name}
                     </span>
-                    <span className="text-stone-500">{i.notes || ""}</span>
+                    <span className="text-gold-600 italic font-medium">{i.notes || ""}</span>
                   </li>
                 ))}
               </ul>
               {order.customerNotes && (
-                <p className="mt-2 text-xs text-yellow-400">
+                <p className="mt-3 text-[11px] text-gold-600 bg-gold-500/5 p-2 rounded-lg border border-gold-500/10">
                   Note: {order.customerNotes}
                 </p>
               )}
               {next && (
                 <button
                   onClick={() => updateStatus(order._id, next)}
-                  className="mt-4 w-full rounded-lg bg-brand-600 py-2 text-sm font-bold hover:bg-brand-500"
+                  className="mt-5 w-full rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 hover:from-gold-600 hover:to-gold-500 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-xs cursor-pointer"
                 >
                   Mark {next.replace("_", " ")}
                 </button>
@@ -121,7 +125,7 @@ function KitchenBoard() {
           );
         })}
         {sorted.length === 0 && (
-          <p className="col-span-full text-center text-stone-500">
+          <p className="col-span-full text-center text-sm font-serif font-bold text-stone-400 py-12">
             No active orders — waiting for tickets...
           </p>
         )}

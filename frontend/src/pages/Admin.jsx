@@ -6,10 +6,16 @@ import { useAuth } from "../context/AuthContext";
 import { SocketProvider, useSocket } from "../context/SocketContext";
 import { useTheme } from "../context/ThemeContext";
 
+// Reuse components
+import AdminMenuTable from "../components/AdminMenuTable";
+import AdminFoodForm from "../components/AdminFoodForm";
+
 function AdminBoard() {
   const socket = useSocket();
   const { logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
+  
+  // State
   const [data, setData] = useState(null);
   const [menu, setMenu] = useState([]);
   const [alerts, setAlerts] = useState([]);
@@ -21,6 +27,10 @@ function AdminBoard() {
   const [createLoading, setCreateLoading] = useState(false);
   const [adminMessage, setAdminMessage] = useState("");
   const qrCanvasRef = useRef(null);
+
+  // Menu Edit state
+  const [editingItem, setEditingItem] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const load = () => {
     api.get("/admin/dashboard").then((r) => setData(r.data));
@@ -123,27 +133,63 @@ function AdminBoard() {
     link.click();
   };
 
-  const toggleItem = async (id, available) => {
-    await api.put(`/menu/${id}`, { available: !available });
-    load();
+  // Menu CRUD actions
+  const handleToggleAvailability = async (id, available) => {
+    try {
+      await api.put(`/menu/${id}`, { available: !available });
+      setAdminMessage("Dishes availability toggled.");
+      load();
+    } catch {
+      setAdminMessage("Failed to toggle availability.");
+    }
+  };
+
+  const handleEditItem = (item) => {
+    setEditingItem(item);
+    setIsFormOpen(true);
+  };
+
+  const handleDeleteItem = async (id) => {
+    try {
+      await api.delete(`/menu/${id}`);
+      setAdminMessage("Specialty dish deleted successfully.");
+      load();
+    } catch {
+      setAdminMessage("Failed to delete specialty dish.");
+    }
+  };
+
+  const handleFormSubmit = async (formData) => {
+    try {
+      if (editingItem) {
+        await api.put(`/menu/${editingItem._id}`, formData);
+        setAdminMessage("Specialty dish updated successfully.");
+      } else {
+        await api.post("/menu", formData);
+        setAdminMessage("Specialty dish created successfully.");
+      }
+      setIsFormOpen(false);
+      setEditingItem(null);
+      load();
+    } catch (error) {
+      setAdminMessage(
+        error.response?.data?.message || "Failed to save culinary specialty."
+      );
+    }
   };
 
   if (!data)
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        Loading...
+      <div className="flex min-h-screen items-center justify-center bg-cream-50 dark:bg-espresso-950 text-chocolate-900 dark:text-espresso-50 font-serif font-bold text-lg">
+        Loading admin center...
       </div>
     );
 
-  const sentimentColor = {
-    positive: "text-green-600",
-    negative: "text-red-600",
-    neutral: "text-stone-500",
-  };
-
   return (
     <div className="min-h-screen bg-cream-50 dark:bg-espresso-950 text-chocolate-900 dark:text-[#f7f3ec] transition-colors duration-150">
-      <header className="border-b border-cream-200 dark:border-espresso-800 bg-white dark:bg-espresso-900/90 px-6 py-4 backdrop-blur-md">
+      
+      {/* Header */}
+      <header className="border-b border-cream-200 dark:border-espresso-800 bg-white dark:bg-espresso-900/90 px-6 py-4 backdrop-blur-md sticky top-0 z-35">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img
@@ -156,7 +202,7 @@ function AdminBoard() {
                 Admin Management Center
               </h1>
               <p className="text-xs uppercase tracking-wider text-gold-500 font-medium">
-                Revenue · Floor speed · AI sentiment
+                Tables Management · Menu Customization
               </p>
             </div>
           </div>
@@ -180,220 +226,248 @@ function AdminBoard() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-7xl p-6">
+      <div className="mx-auto max-w-7xl p-6 space-y-8">
+        
+        {/* Feedback / Alert notifications */}
+        {adminMessage && (
+          <div className="rounded-xl border border-gold-500/35 bg-gold-500/10 p-4 text-xs font-semibold uppercase tracking-wider text-[#b69234]">
+            🔔 {adminMessage}
+          </div>
+        )}
+
+        {/* Dynamic Alert Banner */}
         {alerts.length > 0 && (
-          <div className="mb-6 rounded-xl border border-red-200 dark:border-red-950 bg-red-50 dark:bg-red-950/20 p-4">
-            <h3 className="font-bold text-red-800 dark:text-red-400">⚠️ AI Sentiment Alerts</h3>
+          <div className="rounded-xl border border-red-200 dark:border-red-950 bg-red-50 dark:bg-red-950/20 p-4 space-y-2">
+            <h3 className="font-bold text-red-800 dark:text-red-400 text-sm">⚠️ Live Waiter & Guest Service Alerts</h3>
             {alerts.map((a, i) => (
-              <p key={i} className="mt-1 text-sm text-red-700 dark:text-red-400">
+              <p key={i} className="text-xs text-red-700 dark:text-red-400">
                 {a.message}
               </p>
             ))}
           </div>
         )}
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl bg-white dark:bg-stone-900 p-5 shadow-sm border border-transparent dark:border-stone-850">
-            <p className="text-sm text-stone-500 dark:text-stone-400">Today's Revenue</p>
-            <p className="text-2xl font-bold text-brand-700 dark:text-brand-400">
-              ₹{data.revenue?.toLocaleString("en-IN")}
+        {/* Clean Dashboard Stats Row (No software analytics) */}
+        <div className="grid gap-6 sm:grid-cols-3">
+          <div className="rounded-2xl bg-white dark:bg-espresso-900 p-6 border border-cream-200 dark:border-espresso-750 shadow-xs">
+            <p className="text-xs text-stone-400 uppercase tracking-widest font-semibold">Gross Dine-In Revenue</p>
+            <p className="text-3xl font-serif font-bold text-gold-500 mt-2">
+              ₹{data.revenue?.toLocaleString("en-IN") || 0}
             </p>
           </div>
-          <div className="rounded-xl bg-white dark:bg-stone-900 p-5 shadow-sm border border-transparent dark:border-stone-850">
-            <p className="text-sm text-stone-500 dark:text-stone-400">Active Orders</p>
-            <p className="text-2xl font-bold dark:text-stone-100">{data.activeOrders}</p>
-          </div>
-          <div className="rounded-xl bg-white dark:bg-stone-900 p-5 shadow-sm border border-transparent dark:border-stone-850">
-            <p className="text-sm text-stone-500 dark:text-stone-400">Wait Reduction</p>
-            <p className="text-2xl font-bold text-brand-700 dark:text-brand-400">
-              {data.avgWaitReduction}s
+          <div className="rounded-2xl bg-white dark:bg-espresso-900 p-6 border border-cream-200 dark:border-espresso-750 shadow-xs">
+            <p className="text-xs text-stone-400 uppercase tracking-widest font-semibold">Active Kitchen Orders</p>
+            <p className="text-3xl font-serif font-bold text-chocolate-900 dark:text-white mt-2">
+              {data.activeOrders}
             </p>
           </div>
-          <div className="rounded-xl bg-white dark:bg-stone-900 p-5 shadow-sm border border-transparent dark:border-stone-850">
-            <p className="text-sm text-stone-500 dark:text-stone-400">Issue Detection</p>
-            <p className="text-2xl font-bold text-warm-600 dark:text-warm-400">
-              +{data.issueDetectionBoost}%
+          <div className="rounded-2xl bg-white dark:bg-espresso-900 p-6 border border-cream-200 dark:border-espresso-750 shadow-xs">
+            <p className="text-xs text-stone-400 uppercase tracking-widest font-semibold">Seeded Tables Count</p>
+            <p className="text-3xl font-serif font-bold text-chocolate-900 dark:text-white mt-2">
+              {data.tableCount}
             </p>
           </div>
         </div>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <div className="rounded-xl bg-white dark:bg-stone-900 p-6 shadow-sm border border-transparent dark:border-stone-850">
-            <div className="flex items-center justify-between">
-              <h2 className="font-bold dark:text-stone-100">Tables</h2>
-              <span className="text-sm text-stone-500 dark:text-stone-400">
-                Total {data.tableCount} tables
+        {/* Tables & QR Code Generator side-by-side */}
+        <div className="grid gap-8 lg:grid-cols-2">
+          
+          {/* Tables Management */}
+          <div className="rounded-3xl bg-white dark:bg-espresso-900 p-6 border border-cream-200 dark:border-espresso-750 shadow-xs space-y-6">
+            <div className="flex items-center justify-between border-b border-cream-100 dark:border-espresso-800 pb-3">
+              <h2 className="font-serif text-xl font-bold">Dining Room Floor</h2>
+              <span className="text-xs font-semibold text-stone-400 uppercase tracking-wider">
+                Total {data.tables?.length} tables
               </span>
             </div>
-            <div className="mt-4 grid grid-cols-4 gap-2">
+            
+            {/* Grid of tables */}
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
               {data.tables?.map((t) => (
                 <div
                   key={t._id}
-                  className="relative rounded-lg border border-stone-200 dark:border-stone-800 p-3 text-center text-xs font-medium bg-stone-50 dark:bg-stone-850 text-stone-700 dark:text-stone-300 group hover:border-red-200 dark:hover:border-red-800"
+                  className="relative rounded-xl border border-cream-200 dark:border-espresso-800 p-4 text-center bg-cream-50/50 dark:bg-espresso-950/40 text-chocolate-900 dark:text-espresso-100 group transition-all"
                 >
                   <button
                     onClick={() => deleteTable(t._id)}
-                    className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-600 transition-opacity p-0.5"
+                    className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-500 transition-opacity p-1 cursor-pointer"
                     title="Delete Table"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                    </svg>
+                    ✕
                   </button>
-                  <div className="text-sm font-semibold">T{t.tableNumber}</div>
-                  <div className="mt-1 text-[10px] uppercase tracking-[0.15em] text-stone-500 dark:text-stone-400">
-                    Cap {t.capacity || 1}
-                  </div>
+                  <p className="font-serif text-sm font-bold">Table {t.tableNumber}</p>
+                  <p className="text-[10px] text-stone-400 mt-1 uppercase tracking-wider">
+                    Cap: {t.capacity}
+                  </p>
+                  <span className={`inline-block mt-2 rounded-full h-2 w-2 ${
+                    t.status === "available" ? "bg-green-500" : "bg-gold-500"
+                  }`} />
                 </div>
               ))}
             </div>
-          </div>
 
-          <div className="rounded-xl bg-white dark:bg-stone-900 p-6 shadow-sm border border-transparent dark:border-stone-850">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <h2 className="font-bold dark:text-stone-100">Create New Table</h2>
-                <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
-                  Add table records and generate QR codes for guest seating.
-                </p>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium">
-                  Table number
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={newTableNumber}
-                  onChange={(e) => setNewTableNumber(e.target.value)}
-                  className="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-850 px-4 py-3 dark:text-stone-100"
-                  placeholder="Enter table number"
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium">
-                  Capacity
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={newTableCapacity}
-                  onChange={(e) => setNewTableCapacity(e.target.value)}
-                  className="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-850 px-4 py-3 dark:text-stone-100"
-                />
+            {/* Create New Table Form */}
+            <div className="bg-cream-50/30 dark:bg-espresso-950/40 p-4 rounded-xl border border-cream-200 dark:border-espresso-800 space-y-4">
+              <h3 className="font-serif text-sm font-bold tracking-wide">Register New Dining Table</h3>
+              <div className="grid gap-3 grid-cols-2">
+                <div>
+                  <label className="block text-[10px] uppercase text-stone-400 font-semibold mb-1">
+                    Table Number
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={newTableNumber}
+                    onChange={(e) => setNewTableNumber(e.target.value)}
+                    placeholder="e.g. 7"
+                    className="w-full rounded-lg border border-cream-200 dark:border-espresso-750 px-3 py-2 bg-white dark:bg-espresso-950 outline-none focus:border-gold-500 text-xs font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase text-stone-400 font-semibold mb-1">
+                    Capacity (Seats)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={newTableCapacity}
+                    onChange={(e) => setNewTableCapacity(e.target.value)}
+                    className="w-full rounded-lg border border-cream-200 dark:border-espresso-750 px-3 py-2 bg-white dark:bg-espresso-950 outline-none focus:border-gold-500 text-xs font-semibold"
+                  />
+                </div>
               </div>
               <button
                 onClick={createTable}
                 disabled={createLoading || !newTableNumber}
-                className="rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50 cursor-pointer"
+                className="w-full rounded-lg bg-gradient-to-r from-gold-500 to-gold-400 hover:from-gold-600 hover:to-gold-500 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-sm disabled:opacity-50 cursor-pointer"
               >
-                {createLoading ? "Creating table..." : "Create Table"}
+                {createLoading ? "Creating..." : "Create Table"}
               </button>
-              {adminMessage && (
-                <p className="rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-850 p-3 text-sm text-stone-700 dark:text-stone-300">
-                  {adminMessage}
-                </p>
-              )}
             </div>
           </div>
-        </div>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <div className="rounded-xl bg-white dark:bg-stone-900 p-6 shadow-sm border border-transparent dark:border-stone-850">
-            <h2 className="font-bold dark:text-stone-100">QR Generator</h2>
-            <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
-              Admin-only QR links for table assignment.
-            </p>
-            <div className="mt-4 space-y-4">
+          {/* QR Generator */}
+          <div className="rounded-3xl bg-white dark:bg-espresso-900 p-6 border border-cream-200 dark:border-espresso-750 shadow-xs space-y-6 flex flex-col justify-between">
+            <div>
+              <h2 className="font-serif text-xl font-bold border-b border-cream-100 dark:border-espresso-800 pb-3">
+                Table Medallion QR Generator
+              </h2>
+              <p className="mt-2 text-xs text-stone-400 leading-relaxed">
+                Generate high-quality cryptographic QR codes linking physical table medallions directly to our digital check-in interface.
+              </p>
+            </div>
+
+            <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-medium">
-                  Select table
+                <label className="mb-1.5 block text-xs uppercase tracking-wider text-stone-500 dark:text-espresso-100 font-medium">
+                  Select Dining Table
                 </label>
                 <select
                   value={selectedTable}
                   onChange={(e) => setSelectedTable(e.target.value)}
-                  className="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-850 px-4 py-3 dark:text-stone-100"
+                  className="w-full rounded-xl border border-cream-200 dark:border-espresso-800 bg-cream-50/50 dark:bg-espresso-950/40 px-4 py-3 outline-none focus:border-gold-500 text-xs font-semibold"
                 >
                   {data.tables?.map((t) => (
                     <option key={t._id} value={t.tableNumber}>
-                      Table {t.tableNumber}
+                      Table {t.tableNumber} (Token: {t.qrToken?.substring(0, 10)}...)
                     </option>
                   ))}
                 </select>
               </div>
-              <button
-                onClick={createQr}
-                disabled={qrLoading || !selectedTable}
-                className="rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50 cursor-pointer"
-              >
-                {qrLoading ? "Generating..." : "Generate QR Link"}
-              </button>
-              <div className="rounded-2xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-850 p-4 text-sm">
-                <p className="font-semibold">Guest landing URL</p>
-                <p className="mt-2 break-all text-stone-600 dark:text-stone-400">{shareUrl}</p>
-              </div>
-              <div className="mx-auto flex h-44 w-44 items-center justify-center rounded-2xl border border-dashed border-stone-200 dark:border-stone-700 bg-white p-3">
-                <QRCodeCanvas
-                  ref={qrCanvasRef}
-                  value={shareUrl}
-                  size={160}
-                  level="H"
-                  includeMargin
-                />
-              </div>
-              <button
-                onClick={exportQr}
-                disabled={!selectedTable}
-                className="w-full rounded-xl bg-brand-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50 cursor-pointer"
-              >
-                Download QR PNG
-              </button>
+
+              {selectedTableObj && (
+                <div className="flex flex-col sm:flex-row items-center gap-6 pt-2 bg-cream-50/20 dark:bg-espresso-950/10 p-4 rounded-2xl border border-cream-100 dark:border-espresso-850">
+                  <div className="flex h-36 w-36 items-center justify-center rounded-xl border border-dashed border-cream-250 dark:border-espresso-800 bg-white p-2 shrink-0">
+                    <QRCodeCanvas
+                      ref={qrCanvasRef}
+                      value={shareUrl}
+                      size={128}
+                      level="H"
+                      includeMargin
+                    />
+                  </div>
+                  <div className="space-y-3 flex-1">
+                    <p className="text-xs uppercase tracking-widest font-semibold text-gold-500">QR Landing Link</p>
+                    <p className="text-[10px] break-all text-stone-400 max-w-[250px]">{shareUrl}</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={createQr}
+                        disabled={qrLoading}
+                        className="rounded-lg bg-gold-500 hover:bg-gold-600 text-white font-bold px-3 py-2 text-[10px] uppercase tracking-wider transition-colors cursor-pointer"
+                      >
+                        {qrLoading ? "Regenerating..." : "Create Link"}
+                      </button>
+                      <button
+                        onClick={exportQr}
+                        className="rounded-lg border border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-white font-bold px-3 py-2 text-[10px] uppercase tracking-wider transition-colors cursor-pointer"
+                      >
+                        Download PNG
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
+
         </div>
 
-        <div className="mt-8 rounded-xl bg-white dark:bg-stone-900 p-6 shadow-sm border border-transparent dark:border-stone-850">
-          <h2 className="font-bold dark:text-stone-100">Menu Management</h2>
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b dark:border-stone-800 text-left text-stone-500 dark:text-stone-400">
-                  <th className="pb-2">Item</th>
-                  <th className="pb-2">Category</th>
-                  <th className="pb-2">Price</th>
-                  <th className="pb-2">Status</th>
-                  <th className="pb-2">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {menu.map((m) => (
-                  <tr key={m._id} className="border-b dark:border-stone-800/60">
-                    <td className="py-2 font-medium dark:text-stone-150">{m.name}</td>
-                    <td className="capitalize">{m.category}</td>
-                    <td>₹{m.price}</td>
-                    <td>{m.available ? "✅ Available" : "❌ Unavailable"}</td>
-                    <td>
-                      <button
-                        onClick={() => toggleItem(m._id, m.available)}
-                        className="text-xs text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
-                      >
-                        Toggle
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Dynamic Food Specialty Form overlay */}
+        <AnimatePresence>
+          {isFormOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.5 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-black/60 backdrop-blur-xs"
+                onClick={() => {
+                  setIsFormOpen(false);
+                  setEditingItem(null);
+                }}
+              />
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="relative z-10 w-full max-w-xl max-h-[90vh] overflow-y-auto"
+              >
+                <AdminFoodForm
+                  item={editingItem}
+                  onSubmit={handleFormSubmit}
+                  onCancel={() => {
+                    setIsFormOpen(false);
+                    setEditingItem(null);
+                  }}
+                />
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Menu Management Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-serif text-2xl font-bold">Heritage Menu Customs</h2>
+            <button
+              onClick={() => {
+                setEditingItem(null);
+                setIsFormOpen(true);
+              }}
+              className="rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 hover:from-gold-600 hover:to-gold-500 py-3 px-5 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:shadow-lg transition-transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+            >
+              + Add Specialty Dish
+            </button>
           </div>
+
+          <AdminMenuTable
+            menu={menu}
+            onEdit={handleEditItem}
+            onDelete={handleDeleteItem}
+            onToggleAvailability={handleToggleAvailability}
+          />
         </div>
 
-        <div className="mt-6 text-center">
-          <Link to="/roi" className="text-sm text-brand-600 dark:text-brand-400 hover:underline">
-            View ROI Calculator →
-          </Link>
-        </div>
       </div>
     </div>
   );

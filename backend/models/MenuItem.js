@@ -7,17 +7,17 @@ const menuItemSchema = new mongoose.Schema(
     price: { type: Number, required: true },
     category: {
       type: String,
-      enum: ['starters', 'main', 'breads', 'desserts', 'beverages'],
       required: true,
     },
-    dietary: {
-      type: [String],
-      enum: ['jain', 'vegan', 'gluten-free', 'spicy'],
-      default: [],
-    },
-    prepTimeMinutes: { type: Number, default: 15 },
-    available: { type: Boolean, default: true },
     image: { type: String, default: '' },
+    veg: { type: Boolean, default: true },
+    nonVeg: { type: Boolean, default: false },
+    jain: { type: Boolean, default: false },
+    available: { type: Boolean, default: true },
+    bestseller: { type: Boolean, default: false },
+    prepTimeMinutes: { type: Number, default: 15 },
+    spiceLevel: { type: String, default: 'none' }, // 'none', 'low', 'medium', 'high'
+    displayOrder: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
