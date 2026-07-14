@@ -3,11 +3,13 @@ import { Link, Navigate } from "react-router-dom";
 import api from "../lib/api.js";
 import { useAuth } from "../context/AuthContext";
 import { SocketProvider, useSocket } from "../context/SocketContext";
+import { useTheme } from "../context/ThemeContext";
 
 const STATUS_FLOW = ["pending", "in_progress", "ready", "served"];
 
 function KitchenBoard() {
   const socket = useSocket();
+  const { isDark, toggleTheme } = useTheme();
   const [orders, setOrders] = useState([]);
 
   const load = () => api.get("/orders/active").then((r) => setOrders(r.data));
@@ -52,9 +54,17 @@ function KitchenBoard() {
               </p>
             </div>
           </div>
-          <span className="rounded-full bg-green-500/20 px-3 py-1 text-xs font-bold text-green-400">
-            {orders.length} active
-          </span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleTheme}
+              className={`rounded-full px-3 py-2 text-sm font-medium ${isDark ? "bg-stone-800 text-stone-100" : "bg-stone-100 text-stone-750"}`}
+            >
+              {isDark ? "☀️ Light" : "🌙 Dark"}
+            </button>
+            <span className="rounded-full bg-green-500/20 px-3 py-1 text-xs font-bold text-green-400">
+              {orders.length} active
+            </span>
+          </div>
         </div>
       </header>
 

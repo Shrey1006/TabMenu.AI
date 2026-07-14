@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../lib/api.js";
 import { SocketProvider, useSocket } from "../context/SocketContext";
+import { useTheme } from "../context/ThemeContext";
 
 function CustomerApp({ qrToken, tableNumber }) {
   const socket = useSocket();
+  const { isDark, toggleTheme } = useTheme();
   const [menu, setMenu] = useState([]);
   const [cart, setCart] = useState([]);
   const [order, setOrder] = useState(null);
@@ -106,9 +108,17 @@ function CustomerApp({ qrToken, tableNumber }) {
               <p className="text-sm text-stone-500">Table {tableNumber}</p>
             </div>
           </div>
-          <Link to="/" className="text-sm text-stone-500 hover:text-brand-700">
-            ← Home
-          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleTheme}
+              className={`rounded-full px-3 py-2 text-sm font-medium ${isDark ? "bg-stone-800 text-stone-100" : "bg-stone-100 text-stone-700"}`}
+            >
+              {isDark ? "☀️ Light" : "🌙 Dark"}
+            </button>
+            <Link to="/" className="text-sm text-stone-500 hover:text-brand-700">
+              ← Home
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -239,6 +249,7 @@ function CustomerApp({ qrToken, tableNumber }) {
 }
 
 export default function Customer() {
+  const { isDark, toggleTheme } = useTheme();
   const [tableNumber, setTableNumber] = useState(null);
   const [qrToken, setQrToken] = useState(null);
   const [tableInput, setTableInput] = useState("");
@@ -261,7 +272,13 @@ export default function Customer() {
 
   if (!qrToken) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-brand-50 px-4">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-brand-50 px-4 relative">
+        <button
+          onClick={toggleTheme}
+          className={`absolute top-4 right-4 rounded-full px-3 py-2 text-sm font-medium ${isDark ? "bg-stone-800 text-stone-100" : "bg-stone-100 text-stone-700"}`}
+        >
+          {isDark ? "☀️ Light" : "🌙 Dark"}
+        </button>
         <img
           src="/logo.png"
           alt="Logo"

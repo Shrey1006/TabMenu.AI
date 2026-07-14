@@ -4,10 +4,12 @@ import { QRCodeCanvas } from "qrcode.react";
 import api from "../lib/api.js";
 import { useAuth } from "../context/AuthContext";
 import { SocketProvider, useSocket } from "../context/SocketContext";
+import { useTheme } from "../context/ThemeContext";
 
 function AdminBoard() {
   const socket = useSocket();
   const { logout } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const [data, setData] = useState(null);
   const [menu, setMenu] = useState([]);
   const [alerts, setAlerts] = useState([]);
@@ -158,12 +160,20 @@ function AdminBoard() {
               </p>
             </div>
           </div>
-          <button
-            onClick={logout}
-            className="text-sm text-stone-500 hover:text-red-600"
-          >
-            Logout
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleTheme}
+              className={`rounded-full px-3 py-2 text-sm font-medium ${isDark ? "bg-stone-800 text-stone-100" : "bg-stone-100 text-stone-700"}`}
+            >
+              {isDark ? "☀️ Light" : "🌙 Dark"}
+            </button>
+            <button
+              onClick={logout}
+              className="text-sm text-stone-500 hover:text-red-600"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </header>
 
