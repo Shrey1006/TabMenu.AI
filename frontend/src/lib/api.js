@@ -55,6 +55,7 @@ export const tablesAPI = {
   getTableById: (id) => api.get(`/tables/${id}`),
   verifyQRToken: (token) => api.post("/tables/verify-qr", { token }),
   updateTableStatus: (id, status) => api.patch(`/tables/${id}`, { status }),
+  deleteTable: (id) => api.delete(`/tables/${id}`),
 };
 
 // Order endpoints

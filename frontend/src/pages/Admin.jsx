@@ -49,16 +49,39 @@ function AdminBoard() {
     setSelectedTable(String(data.tables[0].tableNumber));
   }, [data, selectedTable]);
 
+  const selectedTableObj = useMemo(() => {
+    if (!selectedTable) return null;
+    return data?.tables?.find((t) => String(t.tableNumber) === String(selectedTable));
+  }, [data?.tables, selectedTable]);
+
   const shareUrl = useMemo(() => {
-    if (!selectedTable) return "";
-    return qrUrl || `${window.location.origin}/table/${selectedTable}`;
-  }, [qrUrl, selectedTable]);
+    if (!selectedTableObj) return "";
+    return qrUrl || `${window.location.origin}/table/${selectedTableObj.qrToken}`;
+  }, [qrUrl, selectedTableObj]);
 
   const createQr = () => {
-    if (!selectedTable) return;
+    if (!selectedTableObj) return;
     setQrLoading(true);
-    setQrUrl(`${window.location.origin}/table/${selectedTable}`);
+    setQrUrl(`${window.location.origin}/table/${selectedTableObj.qrToken}`);
     setQrLoading(false);
+  };
+
+  useEffect(() => {
+    setQrUrl("");
+  }, [selectedTable]);
+
+  const deleteTable = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this table?")) return;
+    try {
+      await api.delete(`/tables/${id}`);
+      setAdminMessage("Table deleted successfully.");
+      setSelectedTable("");
+      load();
+    } catch (error) {
+      setAdminMessage(
+        error.response?.data?.message || "Unable to delete table."
+      );
+    }
   };
 
   const createTable = async () => {
@@ -76,7 +99,7 @@ function AdminBoard() {
       setNewTableNumber("");
       setNewTableCapacity(4);
       setSelectedTable(String(table.tableNumber));
-      setQrUrl(`${window.location.origin}/table/${table.tableNumber}`);
+      setQrUrl(`${window.location.origin}/table/${table.qrToken}`);
       load();
     } catch (error) {
       setAdminMessage(
@@ -193,8 +216,17 @@ function AdminBoard() {
               {data.tables?.map((t) => (
                 <div
                   key={t._id}
-                  className="rounded-lg border border-stone-200 p-3 text-center text-xs font-medium bg-stone-50 text-stone-700"
+                  className="relative rounded-lg border border-stone-200 p-3 text-center text-xs font-medium bg-stone-50 text-stone-700 group hover:border-red-200"
                 >
+                  <button
+                    onClick={() => deleteTable(t._id)}
+                    className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-600 transition-opacity p-0.5"
+                    title="Delete Table"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                   <div className="text-sm font-semibold">T{t.tableNumber}</div>
                   <div className="mt-1 text-[10px] uppercase tracking-[0.15em] text-stone-500">
                     Cap {t.capacity || 1}

@@ -11,7 +11,10 @@ const initialForm = {
 const PROFILE_STORAGE_KEY = "customer-profile";
 
 export default function TableGuest() {
-  const { tableNumber } = useParams();
+  const { tableNumber: tableParam } = useParams();
+  const [tableNumber, setTableNumber] = useState(() => {
+    return /^\d+$/.test(tableParam) ? tableParam : "";
+  });
   const location = useLocation();
   const { isDark, toggleTheme } = useTheme();
   const [guest, setGuest] = useState(initialForm);
@@ -148,8 +151,16 @@ export default function TableGuest() {
   const connectTable = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get(`/tables/connect/${tableNumber}`);
-      localStorage.setItem(`table-token-${tableNumber}`, data.token);
+      let responseData;
+      if (/^\d+$/.test(tableParam)) {
+        const { data } = await api.get(`/tables/connect/${tableParam}`);
+        responseData = data;
+      } else {
+        const { data } = await api.get(`/tables/verify/${tableParam}`);
+        responseData = data;
+      }
+      setTableNumber(String(responseData.tableNumber));
+      localStorage.setItem(`table-token-${responseData.tableNumber}`, responseData.token);
       setMessage("Table connected. Please continue with your mobile profile.");
       if (profile) {
         setStep("menu");
@@ -166,9 +177,9 @@ export default function TableGuest() {
   };
 
   useEffect(() => {
-    if (!tableNumber) return;
+    if (!tableParam) return;
     connectTable();
-  }, [tableNumber]);
+  }, [tableParam]);
 
   useEffect(() => {
     const paymentState = new URLSearchParams(location.search).get("payment");

@@ -53,4 +53,14 @@ router.patch("/:id/status", auth(["waiter", "admin"]), async (req, res) => {
   res.json(table);
 });
 
+router.delete("/:id", auth(["admin"]), async (req, res) => {
+  try {
+    const table = await Table.findByIdAndDelete(req.params.id);
+    if (!table) return res.status(404).json({ message: "Table not found" });
+    res.json({ message: "Table deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error deleting table" });
+  }
+});
+
 export default router;
