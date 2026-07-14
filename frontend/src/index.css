@@ -2,116 +2,30 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-:root {
+@theme {
   --font-serif: "Playfair Display", Georgia, serif;
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 
-  /* Theme color variables */
-  --bg-primary: #fdfbf7; /* Warm Cream */
-  --bg-secondary: #ffffff; /* Soft White */
-  --bg-tertiary: #f5f0e6; /* Soft Cream */
-  --border-color: #e6dcce; /* Soft beige/sand border */
+  /* Custom luxury restaurant colors */
+  --color-cream-50: #fdfbf7;
+  --color-cream-100: #f5efe4;
+  --color-cream-200: #eadecd;
   
-  --text-primary: #3c241c; /* Deep Espresso Brown */
-  --text-secondary: #5c443c; /* Coffee Brown */
-  --text-muted: #8c736a;
+  --color-chocolate-900: #3c241c;
+  --color-chocolate-800: #5c443c;
+  --color-chocolate-700: #8c736a;
+  --color-chocolate-600: #decbba;
   
-  --accent: #b69234; /* Golden */
-  --accent-hover: #9a7827;
-  --accent-light: #f5f0db;
-  
-  /* Brand mappings (browns & gold instead of green) */
-  --brand-50: #fdfbf7;
-  --brand-100: #f5f0e6;
-  --brand-200: #eadecd;
-  --brand-500: #b69234;
-  --brand-600: #8c6239;
-  --brand-700: #5c3b2d;
-  --brand-800: #3c241c;
-  
-  /* Warm mappings */
-  --warm-50: #fdfaf2;
-  --warm-100: #faf2e1;
-  --warm-500: #b69234;
-  --warm-600: #8c6239;
+  --color-gold-400: #d5b259;
+  --color-gold-500: #b69234;
+  --color-gold-600: #9a7827;
 
-  /* Blue overrides for Waiter portal to avoid bright blue */
-  --blue-50: #fcfaf7;
-  --blue-200: #e6dcce;
-  --blue-800: #8c6239;
-  --blue-900: #3c241c;
-}
-
-.dark {
-  /* Theme color variables */
-  --bg-primary: #120b08; /* Warm Black / Espresso Black */
-  --bg-secondary: #1c120e; /* Dark Chocolate */
-  --bg-tertiary: #271a15; /* Espresso Brown */
-  --border-color: #3b251e; /* Dark chocolate border */
-  
-  --text-primary: #f7f3ec; /* Warm Cream text */
-  --text-secondary: #decbba; /* Warm tan text */
-  --text-muted: #a48d7e;
-  
-  --accent: #d5b259; /* Warm Gold */
-  --accent-hover: #eadfb4;
-  --accent-light: #423012;
-  
-  /* Brand mappings */
-  --brand-50: #1c120e;
-  --brand-100: #271a15;
-  --brand-200: #3b251e;
-  --brand-500: #d5b259;
-  --brand-600: #b69234;
-  --brand-700: #f7f3ec;
-  --brand-800: #faf6f0;
-  
-  /* Warm mappings */
-  --warm-50: #1a100c;
-  --warm-100: #2c1c16;
-  --warm-500: #d5b259;
-  --warm-600: #b69234;
-
-  /* Blue overrides for Waiter portal */
-  --blue-50: #1c120e;
-  --blue-200: #3b251e;
-  --blue-800: #d5b259;
-  --blue-900: #f7f3ec;
-}
-
-@theme {
-  --font-sans: var(--font-sans);
-  --font-serif: var(--font-serif);
-  
-  --color-brand-50: var(--brand-50);
-  --color-brand-100: var(--brand-100);
-  --color-brand-200: var(--brand-200);
-  --color-brand-500: var(--brand-500);
-  --color-brand-600: var(--brand-600);
-  --color-brand-700: var(--brand-700);
-  --color-brand-800: var(--brand-800);
-  
-  --color-warm-50: var(--warm-50);
-  --color-warm-100: var(--warm-100);
-  --color-warm-500: var(--warm-500);
-  --color-warm-600: var(--warm-600);
-
-  --color-blue-50: var(--blue-50);
-  --color-blue-200: var(--blue-200);
-  --color-blue-800: var(--blue-800);
-  --color-blue-900: var(--blue-900);
-
-  /* Override standard background/text to adapt natively */
-  --color-white: var(--bg-secondary);
-  --color-stone-50: var(--bg-primary);
-  --color-stone-100: var(--bg-tertiary);
-  --color-stone-200: var(--border-color);
-  
-  --color-stone-500: var(--text-muted);
-  --color-stone-600: var(--text-secondary);
-  --color-stone-700: var(--text-secondary);
-  --color-stone-800: var(--text-secondary);
-  --color-stone-900: var(--text-primary);
+  --color-espresso-950: #120b08;
+  --color-espresso-900: #1c120e;
+  --color-espresso-800: #271a15;
+  --color-espresso-700: #3b251e;
+  --color-espresso-100: #decbba;
+  --color-espresso-50: #f7f3ec;
 }
 
 html, body, #root {
@@ -123,11 +37,16 @@ html, body, #root {
 
 body {
   font-family: var(--font-sans);
-  background: var(--bg-primary);
-  color: var(--text-primary);
+  background: #fdfbf7;
+  color: #3c241c;
   transition-property: background-color, border-color, text-decoration-color, fill, stroke;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+  transition-duration: 200ms;
+}
+
+.dark body {
+  background: #120b08;
+  color: #f7f3ec;
 }
 
 @keyframes pulse-ring {
