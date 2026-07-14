@@ -94,8 +94,8 @@ function CustomerApp({ qrToken, tableNumber }) {
   };
 
   return (
-    <div className="min-h-screen bg-stone-50">
-      <header className="border-b bg-white px-4 py-4">
+    <div className="min-h-screen bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 transition-colors duration-150">
+      <header className="border-b border-stone-200 dark:border-stone-850 bg-white dark:bg-stone-900 px-4 py-4">
         <div className="mx-auto flex max-w-4xl items-center justify-between">
           <div className="flex items-center gap-3">
             <img
@@ -104,8 +104,8 @@ function CustomerApp({ qrToken, tableNumber }) {
               className="h-10 w-10 rounded-full"
             />
             <div>
-              <h1 className="font-bold text-brand-800">Ambika Pure Veg</h1>
-              <p className="text-sm text-stone-500">Table {tableNumber}</p>
+              <h1 className="font-bold text-brand-800 dark:text-brand-400">Ambika Pure Veg</h1>
+              <p className="text-sm text-stone-500 dark:text-stone-400">Table {tableNumber}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -115,7 +115,7 @@ function CustomerApp({ qrToken, tableNumber }) {
             >
               {isDark ? "☀️ Light" : "🌙 Dark"}
             </button>
-            <Link to="/" className="text-sm text-stone-500 hover:text-brand-700">
+            <Link to="/" className="text-sm text-stone-500 dark:text-stone-450 hover:text-brand-700 dark:hover:text-brand-400">
               ← Home
             </Link>
           </div>
@@ -124,23 +124,23 @@ function CustomerApp({ qrToken, tableNumber }) {
 
       <div className="mx-auto max-w-4xl px-4 py-6">
         {order && (
-          <div className="mb-6 rounded-xl border border-brand-200 bg-white p-4">
+          <div className="mb-6 rounded-xl border border-brand-200 dark:border-brand-900/60 bg-white dark:bg-stone-900 p-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-bold">Your Order</h2>
+              <h2 className="font-bold dark:text-stone-100">Your Order</h2>
               <span
                 className={`rounded-full px-3 py-1 text-xs font-semibold ${statusColor[order.status] || ""}`}
               >
                 {order.status?.replace("_", " ")}
               </span>
             </div>
-            <ul className="mt-2 space-y-1 text-sm text-stone-600">
+            <ul className="mt-2 space-y-1 text-sm text-stone-600 dark:text-stone-300">
               {order.items?.map((i, idx) => (
                 <li key={idx}>
                   {i.quantity}x {i.name} — ₹{i.price * i.quantity}
                 </li>
               ))}
             </ul>
-            <p className="mt-2 font-bold">Total: ₹{order.totalAmount}</p>
+            <p className="mt-2 font-bold dark:text-stone-100">Total: ₹{order.totalAmount}</p>
             <div className="mt-3 flex gap-2">
               <button
                 onClick={callWaiter}
@@ -165,7 +165,7 @@ function CustomerApp({ qrToken, tableNumber }) {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${filter === f ? "bg-brand-600 text-white" : "bg-white text-stone-600 border"}`}
+              className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${filter === f ? "bg-brand-600 text-white" : "bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-300 border dark:border-stone-800"}`}
             >
               {f === "all" ? "All Items" : f}
             </button>
@@ -174,16 +174,16 @@ function CustomerApp({ qrToken, tableNumber }) {
 
         <div className="grid gap-4 sm:grid-cols-2">
           {filtered.map((item) => (
-            <div key={item._id} className="rounded-xl border bg-white p-4">
+            <div key={item._id} className="rounded-xl border border-stone-200 dark:border-stone-850 bg-white dark:bg-stone-900 p-4">
               <div className="flex justify-between">
-                <h3 className="font-bold">{item.name}</h3>
-                <span className="font-semibold text-brand-700">
+                <h3 className="font-bold dark:text-stone-100">{item.name}</h3>
+                <span className="font-semibold text-brand-700 dark:text-brand-400">
                   ₹{item.price}
                 </span>
               </div>
-              <p className="mt-1 text-sm text-stone-500">{item.description}</p>
+              <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">{item.description}</p>
               <div className="mt-2 flex items-center justify-between">
-                <span className="text-xs text-stone-400">
+                <span className="text-xs text-stone-400 dark:text-stone-450">
                   {item.prepTimeMinutes} min · {item.category}
                 </span>
                 <button
@@ -198,7 +198,7 @@ function CustomerApp({ qrToken, tableNumber }) {
         </div>
 
         {cart.length > 0 && (
-          <div className="fixed bottom-0 left-0 right-0 border-t bg-white p-4 shadow-lg">
+          <div className="fixed bottom-0 left-0 right-0 border-t border-stone-200 dark:border-stone-850 bg-white dark:bg-stone-900 p-4 shadow-lg">
             <div className="mx-auto flex max-w-4xl items-center justify-between">
               <div>
                 <p className="font-bold">
@@ -218,10 +218,10 @@ function CustomerApp({ qrToken, tableNumber }) {
         )}
 
         {order && (
-          <div className="mt-8 rounded-xl border bg-white p-4">
-            <h3 className="font-bold">Leave Feedback</h3>
+          <div className="mt-8 rounded-xl border border-stone-200 dark:border-stone-850 bg-white dark:bg-stone-900 p-4">
+            <h3 className="font-bold dark:text-stone-100">Leave Feedback</h3>
             {feedbackSent ? (
-              <p className="mt-2 text-sm text-brand-600">
+              <p className="mt-2 text-sm text-brand-600 dark:text-brand-400">
                 Thank you! Your feedback has been analyzed by our AI engine.
               </p>
             ) : (
@@ -230,7 +230,7 @@ function CustomerApp({ qrToken, tableNumber }) {
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
                   placeholder="How was your dining experience?"
-                  className="mt-2 w-full rounded-lg border p-3 text-sm"
+                  className="mt-2 w-full rounded-lg border border-stone-200 dark:border-stone-800 p-3 text-sm bg-white dark:bg-stone-850 dark:text-stone-100"
                   rows={3}
                 />
                 <button
@@ -272,7 +272,7 @@ export default function Customer() {
 
   if (!qrToken) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-brand-50 px-4 relative">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-brand-50 dark:bg-stone-950 px-4 relative transition-colors duration-150">
         <button
           onClick={toggleTheme}
           className={`absolute top-4 right-4 rounded-full px-3 py-2 text-sm font-medium ${isDark ? "bg-stone-800 text-stone-100" : "bg-stone-100 text-stone-700"}`}
@@ -284,8 +284,8 @@ export default function Customer() {
           alt="Logo"
           className="h-20 w-20 rounded-full shadow-lg"
         />
-        <h1 className="mt-6 text-2xl font-bold">Connect to Your Table</h1>
-        <p className="mt-2 text-center text-stone-600">
+        <h1 className="mt-6 text-2xl font-bold dark:text-stone-100">Connect to Your Table</h1>
+        <p className="mt-2 text-center text-stone-600 dark:text-stone-400">
           Enter the table number from the QR code generated by your restaurant.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -295,7 +295,7 @@ export default function Customer() {
             value={tableInput}
             onChange={(e) => setTableInput(e.target.value)}
             placeholder="Enter table number"
-            className="rounded-lg border px-4 py-3"
+            className="rounded-lg border border-stone-200 dark:border-stone-850 px-4 py-3 bg-white dark:bg-stone-900 dark:text-stone-100"
           />
           <button
             onClick={scanTable}
@@ -307,7 +307,7 @@ export default function Customer() {
         </div>
         <Link
           to="/"
-          className="mt-6 text-sm text-stone-500 hover:text-brand-700"
+          className="mt-6 text-sm text-stone-500 dark:text-stone-450 hover:text-brand-700 dark:hover:text-brand-400"
         >
           ← Back to Home
         </Link>

@@ -23,7 +23,7 @@ export default function DashboardCard({
         </div>
 
         <h3 className={`mb-2 text-2xl font-bold ${textColor}`}>{title}</h3>
-        <p className="mb-4 text-sm leading-relaxed text-stone-600">
+        <p className="mb-4 text-sm leading-relaxed text-stone-600 dark:text-stone-300">
           {description}
         </p>
 
@@ -31,7 +31,7 @@ export default function DashboardCard({
           {features.map((feature, idx) => (
             <div key={idx} className="flex items-start gap-2">
               <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-current opacity-60"></span>
-              <span className="text-sm font-medium text-stone-700">
+              <span className="text-sm font-medium text-stone-700 dark:text-stone-300">
                 {feature}
               </span>
             </div>

@@ -142,8 +142,8 @@ function AdminBoard() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-100">
-      <header className="border-b bg-white px-6 py-4">
+    <div className="min-h-screen bg-stone-100 dark:bg-stone-950 text-stone-900 dark:text-stone-100 transition-colors duration-150">
+      <header className="border-b border-stone-200 dark:border-stone-850 bg-white dark:bg-stone-900 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img
@@ -152,10 +152,10 @@ function AdminBoard() {
               className="h-10 w-10 rounded-full"
             />
             <div>
-              <h1 className="text-xl font-bold text-purple-900">
+              <h1 className="text-xl font-bold text-purple-900 dark:text-purple-400">
                 Admin Management Center
               </h1>
-              <p className="text-sm text-stone-500">
+              <p className="text-sm text-stone-500 dark:text-stone-400">
                 Revenue · Floor speed · AI sentiment
               </p>
             </div>
@@ -169,7 +169,7 @@ function AdminBoard() {
             </button>
             <button
               onClick={logout}
-              className="text-sm text-stone-500 hover:text-red-600"
+              className="text-sm text-stone-500 dark:text-stone-400 hover:text-red-600 dark:hover:text-red-400"
             >
               Logout
             </button>
@@ -179,10 +179,10 @@ function AdminBoard() {
 
       <div className="mx-auto max-w-7xl p-6">
         {alerts.length > 0 && (
-          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4">
-            <h3 className="font-bold text-red-800">⚠️ AI Sentiment Alerts</h3>
+          <div className="mb-6 rounded-xl border border-red-200 dark:border-red-950 bg-red-50 dark:bg-red-950/20 p-4">
+            <h3 className="font-bold text-red-800 dark:text-red-400">⚠️ AI Sentiment Alerts</h3>
             {alerts.map((a, i) => (
-              <p key={i} className="mt-1 text-sm text-red-700">
+              <p key={i} className="mt-1 text-sm text-red-700 dark:text-red-400">
                 {a.message}
               </p>
             ))}
@@ -190,35 +190,35 @@ function AdminBoard() {
         )}
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl bg-white p-5 shadow-sm">
-            <p className="text-sm text-stone-500">Today's Revenue</p>
-            <p className="text-2xl font-bold text-brand-700">
+          <div className="rounded-xl bg-white dark:bg-stone-900 p-5 shadow-sm border border-transparent dark:border-stone-850">
+            <p className="text-sm text-stone-500 dark:text-stone-400">Today's Revenue</p>
+            <p className="text-2xl font-bold text-brand-700 dark:text-brand-400">
               ₹{data.revenue?.toLocaleString("en-IN")}
             </p>
           </div>
-          <div className="rounded-xl bg-white p-5 shadow-sm">
-            <p className="text-sm text-stone-500">Active Orders</p>
-            <p className="text-2xl font-bold">{data.activeOrders}</p>
+          <div className="rounded-xl bg-white dark:bg-stone-900 p-5 shadow-sm border border-transparent dark:border-stone-850">
+            <p className="text-sm text-stone-500 dark:text-stone-400">Active Orders</p>
+            <p className="text-2xl font-bold dark:text-stone-100">{data.activeOrders}</p>
           </div>
-          <div className="rounded-xl bg-white p-5 shadow-sm">
-            <p className="text-sm text-stone-500">Wait Reduction</p>
-            <p className="text-2xl font-bold text-brand-700">
+          <div className="rounded-xl bg-white dark:bg-stone-900 p-5 shadow-sm border border-transparent dark:border-stone-850">
+            <p className="text-sm text-stone-500 dark:text-stone-400">Wait Reduction</p>
+            <p className="text-2xl font-bold text-brand-700 dark:text-brand-400">
               {data.avgWaitReduction}s
             </p>
           </div>
-          <div className="rounded-xl bg-white p-5 shadow-sm">
-            <p className="text-sm text-stone-500">Issue Detection</p>
-            <p className="text-2xl font-bold text-warm-600">
+          <div className="rounded-xl bg-white dark:bg-stone-900 p-5 shadow-sm border border-transparent dark:border-stone-850">
+            <p className="text-sm text-stone-500 dark:text-stone-400">Issue Detection</p>
+            <p className="text-2xl font-bold text-warm-600 dark:text-warm-400">
               +{data.issueDetectionBoost}%
             </p>
           </div>
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <div className="rounded-xl bg-white p-6 shadow-sm">
+          <div className="rounded-xl bg-white dark:bg-stone-900 p-6 shadow-sm border border-transparent dark:border-stone-850">
             <div className="flex items-center justify-between">
-              <h2 className="font-bold">Tables</h2>
-              <span className="text-sm text-stone-500">
+              <h2 className="font-bold dark:text-stone-100">Tables</h2>
+              <span className="text-sm text-stone-500 dark:text-stone-400">
                 Total {data.tableCount} tables
               </span>
             </div>
@@ -226,7 +226,7 @@ function AdminBoard() {
               {data.tables?.map((t) => (
                 <div
                   key={t._id}
-                  className="relative rounded-lg border border-stone-200 p-3 text-center text-xs font-medium bg-stone-50 text-stone-700 group hover:border-red-200"
+                  className="relative rounded-lg border border-stone-200 dark:border-stone-800 p-3 text-center text-xs font-medium bg-stone-50 dark:bg-stone-850 text-stone-700 dark:text-stone-300 group hover:border-red-200 dark:hover:border-red-800"
                 >
                   <button
                     onClick={() => deleteTable(t._id)}
@@ -238,7 +238,7 @@ function AdminBoard() {
                     </svg>
                   </button>
                   <div className="text-sm font-semibold">T{t.tableNumber}</div>
-                  <div className="mt-1 text-[10px] uppercase tracking-[0.15em] text-stone-500">
+                  <div className="mt-1 text-[10px] uppercase tracking-[0.15em] text-stone-500 dark:text-stone-400">
                     Cap {t.capacity || 1}
                   </div>
                 </div>
@@ -246,11 +246,11 @@ function AdminBoard() {
             </div>
           </div>
 
-          <div className="rounded-xl bg-white p-6 shadow-sm">
+          <div className="rounded-xl bg-white dark:bg-stone-900 p-6 shadow-sm border border-transparent dark:border-stone-850">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h2 className="font-bold">Create New Table</h2>
-                <p className="mt-2 text-sm text-stone-500">
+                <h2 className="font-bold dark:text-stone-100">Create New Table</h2>
+                <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
                   Add table records and generate QR codes for guest seating.
                 </p>
               </div>
@@ -265,7 +265,7 @@ function AdminBoard() {
                   min="1"
                   value={newTableNumber}
                   onChange={(e) => setNewTableNumber(e.target.value)}
-                  className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3"
+                  className="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-850 px-4 py-3 dark:text-stone-100"
                   placeholder="Enter table number"
                 />
               </div>
@@ -278,18 +278,18 @@ function AdminBoard() {
                   min="1"
                   value={newTableCapacity}
                   onChange={(e) => setNewTableCapacity(e.target.value)}
-                  className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3"
+                  className="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-850 px-4 py-3 dark:text-stone-100"
                 />
               </div>
               <button
                 onClick={createTable}
                 disabled={createLoading || !newTableNumber}
-                className="rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
+                className="rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50 cursor-pointer"
               >
                 {createLoading ? "Creating table..." : "Create Table"}
               </button>
               {adminMessage && (
-                <p className="rounded-xl border border-stone-200 bg-stone-50 p-3 text-sm text-stone-700">
+                <p className="rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-850 p-3 text-sm text-stone-700 dark:text-stone-300">
                   {adminMessage}
                 </p>
               )}
@@ -298,9 +298,9 @@ function AdminBoard() {
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <div className="rounded-xl bg-white p-6 shadow-sm">
-            <h2 className="font-bold">QR Generator</h2>
-            <p className="mt-2 text-sm text-stone-500">
+          <div className="rounded-xl bg-white dark:bg-stone-900 p-6 shadow-sm border border-transparent dark:border-stone-850">
+            <h2 className="font-bold dark:text-stone-100">QR Generator</h2>
+            <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
               Admin-only QR links for table assignment.
             </p>
             <div className="mt-4 space-y-4">
@@ -311,7 +311,7 @@ function AdminBoard() {
                 <select
                   value={selectedTable}
                   onChange={(e) => setSelectedTable(e.target.value)}
-                  className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3"
+                  className="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-850 px-4 py-3 dark:text-stone-100"
                 >
                   {data.tables?.map((t) => (
                     <option key={t._id} value={t.tableNumber}>
@@ -323,15 +323,15 @@ function AdminBoard() {
               <button
                 onClick={createQr}
                 disabled={qrLoading || !selectedTable}
-                className="rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
+                className="rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50 cursor-pointer"
               >
                 {qrLoading ? "Generating..." : "Generate QR Link"}
               </button>
-              <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4 text-sm">
+              <div className="rounded-2xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-850 p-4 text-sm">
                 <p className="font-semibold">Guest landing URL</p>
-                <p className="mt-2 break-all text-stone-600">{shareUrl}</p>
+                <p className="mt-2 break-all text-stone-600 dark:text-stone-400">{shareUrl}</p>
               </div>
-              <div className="mx-auto flex h-44 w-44 items-center justify-center rounded-2xl border border-dashed bg-white p-3">
+              <div className="mx-auto flex h-44 w-44 items-center justify-center rounded-2xl border border-dashed border-stone-200 dark:border-stone-700 bg-white p-3">
                 <QRCodeCanvas
                   ref={qrCanvasRef}
                   value={shareUrl}
@@ -343,7 +343,7 @@ function AdminBoard() {
               <button
                 onClick={exportQr}
                 disabled={!selectedTable}
-                className="w-full rounded-xl bg-brand-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50"
+                className="w-full rounded-xl bg-brand-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50 cursor-pointer"
               >
                 Download QR PNG
               </button>
@@ -351,12 +351,12 @@ function AdminBoard() {
           </div>
         </div>
 
-        <div className="mt-8 rounded-xl bg-white p-6 shadow-sm">
-          <h2 className="font-bold">Menu Management</h2>
+        <div className="mt-8 rounded-xl bg-white dark:bg-stone-900 p-6 shadow-sm border border-transparent dark:border-stone-850">
+          <h2 className="font-bold dark:text-stone-100">Menu Management</h2>
           <div className="mt-4 overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b text-left text-stone-500">
+                <tr className="border-b dark:border-stone-800 text-left text-stone-500 dark:text-stone-400">
                   <th className="pb-2">Item</th>
                   <th className="pb-2">Category</th>
                   <th className="pb-2">Price</th>
@@ -366,15 +366,15 @@ function AdminBoard() {
               </thead>
               <tbody>
                 {menu.map((m) => (
-                  <tr key={m._id} className="border-b">
-                    <td className="py-2 font-medium">{m.name}</td>
+                  <tr key={m._id} className="border-b dark:border-stone-800/60">
+                    <td className="py-2 font-medium dark:text-stone-150">{m.name}</td>
                     <td className="capitalize">{m.category}</td>
                     <td>₹{m.price}</td>
                     <td>{m.available ? "✅ Available" : "❌ Unavailable"}</td>
                     <td>
                       <button
                         onClick={() => toggleItem(m._id, m.available)}
-                        className="text-xs text-brand-600 hover:underline"
+                        className="text-xs text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
                       >
                         Toggle
                       </button>
@@ -387,7 +387,7 @@ function AdminBoard() {
         </div>
 
         <div className="mt-6 text-center">
-          <Link to="/roi" className="text-sm text-brand-600 hover:underline">
+          <Link to="/roi" className="text-sm text-brand-600 dark:text-brand-400 hover:underline">
             View ROI Calculator →
           </Link>
         </div>

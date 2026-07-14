@@ -114,8 +114,8 @@ const dashboards = [
     icon: "📱",
     description: "Seamless contactless ordering experience",
     path: "/customer",
-    color: "border-brand-200 bg-brand-50",
-    textColor: "text-brand-800",
+    color: "border-brand-200 bg-brand-50 dark:border-brand-900/60 dark:bg-brand-950/20",
+    textColor: "text-brand-800 dark:text-brand-400",
     features: [
       "Browse pure-vegetarian menu with images",
       "Filter by dietary preferences & allergies",
@@ -129,8 +129,8 @@ const dashboards = [
     icon: "👨‍🍳",
     description: "Optimize food preparation workflow",
     path: "/kitchen",
-    color: "border-orange-200 bg-orange-50",
-    textColor: "text-orange-800",
+    color: "border-orange-200 bg-orange-50 dark:border-orange-900/60 dark:bg-orange-950/20",
+    textColor: "text-orange-850 dark:text-orange-400",
     features: [
       "Priority-ordered ticket queue",
       "Live preparation timers",
@@ -144,8 +144,8 @@ const dashboards = [
     icon: "💼",
     description: "Instant service alerts & coordination",
     path: "/waiter",
-    color: "border-blue-200 bg-blue-50",
-    textColor: "text-blue-800",
+    color: "border-blue-200 bg-blue-50 dark:border-blue-900/60 dark:bg-blue-950/20",
+    textColor: "text-blue-800 dark:text-blue-400",
     features: [
       "Ready-to-serve food alerts",
       "Table assignment mapping",
@@ -159,8 +159,8 @@ const dashboards = [
     icon: "📊",
     description: "Real-time operational intelligence",
     path: "/admin",
-    color: "border-purple-200 bg-purple-50",
-    textColor: "text-purple-800",
+    color: "border-purple-200 bg-purple-50 dark:border-purple-900/60 dark:bg-purple-950/20",
+    textColor: "text-purple-800 dark:text-purple-400",
     features: [
       "Floor-wide analytics overview",
       "Table turnover metrics",
@@ -218,7 +218,7 @@ const businessBenefits = [
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-brand-50 via-white to-warm-50">
+    <div className="min-h-screen bg-gradient-to-b from-brand-50 via-white to-warm-50 dark:from-brand-950/20 dark:via-stone-950 dark:to-stone-900 transition-colors duration-150">
       {/* ==================== HERO SECTION ==================== */}
       <section className="relative overflow-hidden px-4 py-16 sm:px-6 sm:py-32">
         <div className="mx-auto max-w-7xl">
@@ -227,25 +227,25 @@ export default function Landing() {
             <img
               src="/logo.png"
               alt="Ambika Pure Veg Logo"
-              className="h-24 w-24 rounded-full object-cover shadow-lg ring-4 ring-brand-200"
+              className="h-24 w-24 rounded-full object-cover shadow-lg ring-4 ring-brand-200 dark:ring-brand-900"
             />
           </div>
 
           {/* Main Headline & Subheadline */}
           <div className="text-center">
-            <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-brand-600">
+            <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-brand-600 dark:text-brand-400">
               Smart Restaurant Operations Platform
             </p>
 
-            <h1 className="text-5xl font-extrabold tracking-tight text-stone-900 sm:text-6xl lg:text-7xl">
+            <h1 className="text-5xl font-extrabold tracking-tight text-stone-900 dark:text-white sm:text-6xl lg:text-7xl">
               Maximize Table Turnover.
               <br />
-              <span className="text-brand-700">Optimize Operations.</span>
+              <span className="text-brand-700 dark:text-brand-400">Optimize Operations.</span>
               <br />
-              <span className="text-warm-600">Delight Guests.</span>
+              <span className="text-warm-600 dark:text-warm-450">Delight Guests.</span>
             </h1>
 
-            <p className="mx-auto mt-8 max-w-3xl text-xl leading-relaxed text-stone-600">
+            <p className="mx-auto mt-8 max-w-3xl text-xl leading-relaxed text-stone-600 dark:text-stone-300">
               Transform Ambika Pure Veg into a frictionless dining experience
               with cryptographic table routing, real-time kitchen
               synchronization, and AI-powered guest insights. Reduce customer
@@ -257,13 +257,13 @@ export default function Landing() {
             <div className="mt-10 flex flex-wrap justify-center gap-4">
               <Link
                 to="/customer"
-                className="rounded-xl bg-brand-600 px-8 py-4 text-lg font-semibold text-white shadow-lg shadow-brand-200 transition hover:bg-brand-700 hover:shadow-xl"
+                className="rounded-xl bg-brand-600 px-8 py-4 text-lg font-semibold text-white shadow-lg shadow-brand-200 transition hover:bg-brand-700 hover:shadow-xl dark:shadow-none"
               >
                 Open Customer Portal
               </Link>
               <Link
                 to="/roi"
-                className="rounded-xl border-2 border-brand-300 bg-white px-8 py-4 text-lg font-semibold text-brand-700 transition hover:bg-brand-50"
+                className="rounded-xl border-2 border-brand-300 bg-white px-8 py-4 text-lg font-semibold text-brand-700 transition hover:bg-brand-50 dark:border-brand-800 dark:bg-stone-900 dark:text-brand-400 dark:hover:bg-stone-850"
               >
                 Calculate ROI
               </Link>
@@ -284,9 +284,9 @@ export default function Landing() {
           </div>
 
           {/* Visual Representation Area */}
-          <div className="mt-16 rounded-3xl border-2 border-dashed border-brand-300 bg-gradient-to-b from-brand-50 to-white p-12">
+          <div className="mt-16 rounded-3xl border-2 border-dashed border-brand-300 bg-gradient-to-b from-brand-50 to-white p-12 dark:border-brand-800 dark:from-brand-950/20 dark:to-stone-900">
             <div className="text-center">
-              <p className="mb-6 text-sm font-medium text-stone-600">
+              <p className="mb-6 text-sm font-medium text-stone-600 dark:text-stone-300">
                 ✨ Synchronized Multi-Role Dashboard Ecosystem
               </p>
               <div className="flex flex-wrap justify-center gap-3">
@@ -299,7 +299,7 @@ export default function Landing() {
                   </div>
                 ))}
               </div>
-              <p className="mt-8 text-xs text-stone-500">
+              <p className="mt-8 text-xs text-stone-500 dark:text-stone-400">
                 Powered by Cryptographic QR Tokens • Socket.io Real-Time
                 Pipelines • PyTorch AI Sentiment Engine
               </p>
@@ -309,13 +309,13 @@ export default function Landing() {
       </section>
 
       {/* ==================== CORE FEATURES SECTION ==================== */}
-      <section id="features" className="bg-white px-4 py-20 sm:px-6">
+      <section id="features" className="bg-white dark:bg-stone-950 px-4 py-20 sm:px-6 transition-colors duration-150">
         <div className="mx-auto max-w-7xl">
           <div className="mb-16 text-center">
-            <h2 className="text-4xl font-bold text-stone-900">
+            <h2 className="text-4xl font-bold text-stone-900 dark:text-stone-100">
               The Technical Foundation
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-stone-600">
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-stone-600 dark:text-stone-400">
               Three pillars of operational excellence, proven to transform
               high-volume restaurant management
             </p>
@@ -340,14 +340,14 @@ export default function Landing() {
       {/* ==================== 4 OPERATIONAL DASHBOARDS SECTION ==================== */}
       <section
         id="roles"
-        className="bg-gradient-to-b from-stone-50 to-white px-4 py-20 sm:px-6"
+        className="bg-gradient-to-b from-stone-50 to-white dark:from-stone-900 dark:to-stone-950 px-4 py-20 sm:px-6 transition-colors duration-150"
       >
         <div className="mx-auto max-w-7xl">
           <div className="mb-16 text-center">
-            <h2 className="text-4xl font-bold text-stone-900">
+            <h2 className="text-4xl font-bold text-stone-900 dark:text-stone-100">
               Four Unified Dashboards
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-stone-600">
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-stone-600 dark:text-stone-400">
               Each role experiences a perfectly orchestrated interface, powered
               by shared real-time data and cryptographic routing
             </p>
@@ -371,13 +371,13 @@ export default function Landing() {
       </section>
 
       {/* ==================== BUSINESS BENEFITS SECTION ==================== */}
-      <section id="benefits" className="bg-white px-4 py-20 sm:px-6">
+      <section id="benefits" className="bg-white dark:bg-stone-950 px-4 py-20 sm:px-6 transition-colors duration-150">
         <div className="mx-auto max-w-7xl">
           <div className="mb-16 text-center">
-            <h2 className="text-4xl font-bold text-stone-900">
+            <h2 className="text-4xl font-bold text-stone-900 dark:text-stone-100">
               Business Impact & ROI
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-stone-600">
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-stone-600 dark:text-stone-400">
               Concrete operational improvements that directly impact your bottom
               line
             </p>
@@ -398,16 +398,17 @@ export default function Landing() {
       </section>
 
       {/* ==================== TECHNICAL ARCHITECTURE SECTION ==================== */}
-      <section className="bg-gradient-to-b from-stone-50 to-white px-4 py-20 sm:px-6">
+      {/* ==================== TECHNICAL ARCHITECTURE SECTION ==================== */}
+      <section className="bg-gradient-to-b from-stone-50 to-white dark:from-stone-900 dark:to-stone-950 px-4 py-20 sm:px-6 transition-colors duration-150">
         <div className="mx-auto max-w-7xl">
-          <div className="rounded-2xl border-2 border-brand-300 bg-gradient-to-r from-brand-50 to-warm-50 p-12">
+          <div className="rounded-2xl border-2 border-brand-300 bg-gradient-to-r from-brand-50 to-warm-50 dark:border-brand-800 dark:from-brand-950/20 dark:to-stone-900 p-12">
             <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
               {/* Left Content */}
               <div>
-                <h2 className="text-3xl font-bold text-stone-900">
+                <h2 className="text-3xl font-bold text-stone-900 dark:text-stone-100">
                   Enterprise-Grade Architecture
                 </h2>
-                <p className="mt-4 leading-relaxed text-stone-600">
+                <p className="mt-4 leading-relaxed text-stone-600 dark:text-stone-300">
                   Built from the ground up for high-volume, fast-paced
                   restaurant environments. Our stack combines cutting-edge
                   security, real-time responsiveness, and intelligent
@@ -415,38 +416,38 @@ export default function Landing() {
                 </p>
 
                 <div className="mt-8 space-y-4">
-                  <div className="rounded-lg bg-white p-4 shadow-sm">
-                    <h4 className="font-bold text-stone-900">
+                  <div className="rounded-lg bg-white dark:bg-stone-900 p-4 shadow-sm">
+                    <h4 className="font-bold text-stone-900 dark:text-stone-100">
                       🔐 Security Layer
                     </h4>
-                    <p className="mt-2 text-sm text-stone-600">
+                    <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
                       Cryptographic token validation, end-to-end encryption, and
                       role-based access control
                     </p>
                   </div>
-                  <div className="rounded-lg bg-white p-4 shadow-sm">
-                    <h4 className="font-bold text-stone-900">
+                  <div className="rounded-lg bg-white dark:bg-stone-900 p-4 shadow-sm">
+                    <h4 className="font-bold text-stone-900 dark:text-stone-100">
                       ⚡ Real-Time Layer
                     </h4>
-                    <p className="mt-2 text-sm text-stone-600">
+                    <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
                       Socket.io bidirectional pipelines with sub-100ms latency
                       across all nodes
                     </p>
                   </div>
-                  <div className="rounded-lg bg-white p-4 shadow-sm">
-                    <h4 className="font-bold text-stone-900">
+                  <div className="rounded-lg bg-white dark:bg-stone-900 p-4 shadow-sm">
+                    <h4 className="font-bold text-stone-900 dark:text-stone-100">
                       🤖 Intelligence Layer
                     </h4>
-                    <p className="mt-2 text-sm text-stone-600">
+                    <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
                       PyTorch NLP models for sentiment analysis and automated
                       issue detection
                     </p>
                   </div>
-                  <div className="rounded-lg bg-white p-4 shadow-sm">
-                    <h4 className="font-bold text-stone-900">
+                  <div className="rounded-lg bg-white dark:bg-stone-900 p-4 shadow-sm">
+                    <h4 className="font-bold text-stone-900 dark:text-stone-100">
                       📊 Analytics Layer
                     </h4>
-                    <p className="mt-2 text-sm text-stone-600">
+                    <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
                       Real-time dashboards with operational KPIs, revenue
                       tracking, and performance metrics
                     </p>
@@ -456,33 +457,33 @@ export default function Landing() {
 
               {/* Right Content - Tech Stack */}
               <div>
-                <h3 className="text-2xl font-bold text-stone-900">
+                <h3 className="text-2xl font-bold text-stone-900 dark:text-stone-100">
                   Modern Tech Stack
                 </h3>
 
                 <div className="mt-8 space-y-4">
-                  <div className="rounded-xl bg-white p-6 shadow-sm">
-                    <h4 className="font-bold text-brand-700">Frontend</h4>
-                    <p className="mt-2 text-sm text-stone-600">
+                  <div className="rounded-xl bg-white dark:bg-stone-900 p-6 shadow-sm">
+                    <h4 className="font-bold text-brand-700 dark:text-brand-400">Frontend</h4>
+                    <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
                       React 19 with Tailwind CSS for responsive, accessible
                       interfaces
                     </p>
                   </div>
-                  <div className="rounded-xl bg-white p-6 shadow-sm">
-                    <h4 className="font-bold text-brand-700">Backend</h4>
-                    <p className="mt-2 text-sm text-stone-600">
+                  <div className="rounded-xl bg-white dark:bg-stone-900 p-6 shadow-sm">
+                    <h4 className="font-bold text-brand-700 dark:text-brand-400">Backend</h4>
+                    <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
                       Node.js/Express with persistent Socket.io connections
                     </p>
                   </div>
-                  <div className="rounded-xl bg-white p-6 shadow-sm">
-                    <h4 className="font-bold text-brand-700">Database</h4>
-                    <p className="mt-2 text-sm text-stone-600">
+                  <div className="rounded-xl bg-white dark:bg-stone-900 p-6 shadow-sm">
+                    <h4 className="font-bold text-brand-700 dark:text-brand-400">Database</h4>
+                    <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
                       MongoDB for flexible, scalable document storage
                     </p>
                   </div>
-                  <div className="rounded-xl bg-white p-6 shadow-sm">
-                    <h4 className="font-bold text-brand-700">AI/ML</h4>
-                    <p className="mt-2 text-sm text-stone-600">
+                  <div className="rounded-xl bg-white dark:bg-stone-900 p-6 shadow-sm">
+                    <h4 className="font-bold text-brand-700 dark:text-brand-400">AI/ML</h4>
+                    <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
                       PyTorch sentiment analysis pipeline for real-time feedback
                       processing
                     </p>
@@ -495,71 +496,71 @@ export default function Landing() {
       </section>
 
       {/* ==================== IMPLEMENTATION TIMELINE SECTION ==================== */}
-      <section className="bg-white px-4 py-20 sm:px-6">
+      <section className="bg-white dark:bg-stone-950 px-4 py-20 sm:px-6 transition-colors duration-150">
         <div className="mx-auto max-w-7xl">
           <div className="mb-16 text-center">
-            <h2 className="text-4xl font-bold text-stone-900">
+            <h2 className="text-4xl font-bold text-stone-900 dark:text-stone-100">
               Ready to Transform Your Operations?
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-stone-600">
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-stone-600 dark:text-stone-400">
               Get started with a personalized demo and ROI analysis for Ambika
               Pure Veg
             </p>
           </div>
 
           <div className="grid gap-8 sm:grid-cols-3">
-            <div className="rounded-2xl border border-stone-200 bg-white p-8 text-center shadow-sm">
-              <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-brand-100 text-2xl">
+            <div className="rounded-2xl border border-stone-200 bg-white p-8 text-center shadow-sm dark:border-stone-850 dark:bg-stone-900">
+              <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/65 text-2xl">
                 📋
               </span>
-              <h3 className="mt-4 text-xl font-bold text-stone-900">
+              <h3 className="mt-4 text-xl font-bold text-stone-900 dark:text-stone-100">
                 Schedule Demo
               </h3>
-              <p className="mt-3 text-sm leading-relaxed text-stone-600">
+              <p className="mt-3 text-sm leading-relaxed text-stone-600 dark:text-stone-300">
                 Experience all four dashboards with live data showcasing real
                 restaurant operations
               </p>
               <Link
                 to="/login"
-                className="mt-4 inline-block font-semibold text-brand-700 hover:text-brand-800"
+                className="mt-4 inline-block font-semibold text-brand-700 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300"
               >
                 Book Now →
               </Link>
             </div>
 
-            <div className="rounded-2xl border border-stone-200 bg-white p-8 text-center shadow-sm">
-              <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-brand-100 text-2xl">
+            <div className="rounded-2xl border border-stone-200 bg-white p-8 text-center shadow-sm dark:border-stone-850 dark:bg-stone-900">
+              <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/65 text-2xl">
                 💰
               </span>
-              <h3 className="mt-4 text-xl font-bold text-stone-900">
+              <h3 className="mt-4 text-xl font-bold text-stone-900 dark:text-stone-100">
                 Calculate ROI
               </h3>
-              <p className="mt-3 text-sm leading-relaxed text-stone-600">
+              <p className="mt-3 text-sm leading-relaxed text-stone-600 dark:text-stone-300">
                 Input your metrics and see projected revenue impact, cost
                 savings, and payback period
               </p>
               <Link
                 to="/roi"
-                className="mt-4 inline-block font-semibold text-brand-700 hover:text-brand-800"
+                className="mt-4 inline-block font-semibold text-brand-700 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300"
               >
                 Calculate →
               </Link>
             </div>
 
-            <div className="rounded-2xl border border-stone-200 bg-white p-8 text-center shadow-sm">
-              <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-brand-100 text-2xl">
+            <div className="rounded-2xl border border-stone-200 bg-white p-8 text-center shadow-sm dark:border-stone-850 dark:bg-stone-900">
+              <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/65 text-2xl">
                 💬
               </span>
-              <h3 className="mt-4 text-xl font-bold text-stone-900">
+              <h3 className="mt-4 text-xl font-bold text-stone-900 dark:text-stone-100">
                 Get Support
               </h3>
-              <p className="mt-3 text-sm leading-relaxed text-stone-600">
+              <p className="mt-3 text-sm leading-relaxed text-stone-600 dark:text-stone-300">
                 Dedicated onboarding team ensures smooth implementation and
                 staff training
               </p>
               <a
                 href="mailto:support@ambikarestaurant.com"
-                className="mt-4 inline-block font-semibold text-brand-700 hover:text-brand-800"
+                className="mt-4 inline-block font-semibold text-brand-700 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300"
               >
                 Contact Us →
               </a>
