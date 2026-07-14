@@ -1,605 +1,628 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import FeatureCard from "../components/FeatureCard";
-import DashboardCard from "../components/DashboardCard";
-import StatCard from "../components/StatCard";
-import BenefitCard from "../components/BenefitCard";
-import Footer from "../components/Footer";
+import { useTheme } from "../context/ThemeContext";
 
-const keyMetrics = [
+const timelineEvents = [
   {
-    value: "90s",
-    label: "Average Wait Time Reduction",
-    description: "Per order through real-time synchronization",
-    icon: "⏱️",
+    year: "1995",
+    title: "The Humble Beginning",
+    description: "Founder Chef Raghavan starts a single traditional spice kitchen near the palace gates, dedicated to South Indian heritage specialties.",
   },
   {
-    value: "40%",
-    label: "Faster Issue Detection",
-    description: "Before customers leave their tables",
-    icon: "🎯",
+    year: "2005",
+    title: "Expanding the Horizon",
+    description: "Introduced traditional clay oven (Tandoor) and Gujarati delicacies, expanding the dining room to seat up to 100 guests.",
   },
   {
-    value: "4",
-    label: "Unified Operational Roles",
-    description: "Perfectly orchestrated dashboards",
-    icon: "👥",
+    year: "2015",
+    title: "Heritage Recognition",
+    description: "Awarded Jaipur's 'Best Vegetarian Heritage Cuisine' title. Added our signature royal private dining room.",
+  },
+  {
+    year: "Today",
+    title: "Modern Dining Sanctuary",
+    description: "Offering premium fine-dining aesthetics while keeping our ancestral recipes, live kitchen, and 100% purity values unchanged.",
   },
 ];
 
-const coreFeatures = [
+const specialities = [
   {
-    id: "routing",
-    icon: "🔐",
-    badge: "Security & Routing",
-    title: "Cryptographic QR Table Mappings",
-    description:
-      "Every table at Ambika Pure Veg receives a uniquely signed cryptographic QR token that anchors the entire guest experience to their physical location.",
-    points: [
-      {
-        label: "Secure Location Binding",
-        desc: "Cryptographically verified QR codes eliminate table mix-ups",
-      },
-      {
-        label: "Role-Based Routing",
-        desc: "Automatically multiplexes to correct dashboard (Customer/Kitchen/Waiter/Admin)",
-      },
-      {
-        label: "Session Integrity",
-        desc: "Tamper-proof session tokens prevent order fraud",
-      },
-      {
-        label: "Scalable Architecture",
-        desc: "Supports unlimited concurrent table sessions",
-      },
-    ],
-    highlight: true,
+    icon: "🥞",
+    title: "Authentic South Indian",
+    description: "Stone-ground rice batters, organic local coconut, and ancestral spices for perfectly crisp dosas and fluffy idlis.",
   },
   {
-    id: "socket",
-    icon: "⚡",
-    badge: "Real-Time Communication",
-    title: "Real-Time Socket.io Pipeline",
-    description:
-      "Persistent bidirectional WebSocket communication ensures millisecond-level latency across all kitchen, table, and staff touchpoints.",
-    points: [
-      {
-        label: "Sub-100ms Latency",
-        desc: "Bidirectional event dispatch across entire restaurant",
-      },
-      {
-        label: "Zero Dropped Orders",
-        desc: "Persistent connections with automatic reconnection",
-      },
-      {
-        label: "Live Kitchen Updates",
-        desc: "Instant prep status propagation to waitstaff",
-      },
-      {
-        label: "Queue Management",
-        desc: "Dynamic priority-based order sequencing",
-      },
-    ],
+    icon: "🍢",
+    title: "Tandoori Masterpieces",
+    description: "Slow-baked flatbreads and marinated cottage cheese (Paneer) grilled over natural wood charcoal tandoors.",
   },
   {
-    id: "ai",
-    icon: "🤖",
-    badge: "AI & Analytics",
-    title: "AI-Powered Customer Sentiment Engine",
-    description:
-      "PyTorch-based NLP classifier instantly analyzes guest feedback, flagging service bottlenecks and kitchen issues in real-time.",
-    points: [
-      {
-        label: "Real-Time Sentiment Analysis",
-        desc: "Identifies negative feedback before customer departs",
-      },
-      {
-        label: "Bottleneck Detection",
-        desc: "40% faster identification of service or kitchen issues",
-      },
-      {
-        label: "Actionable Alerts",
-        desc: "Instant notification to management dashboards",
-      },
-      {
-        label: "Brand Protection",
-        desc: "Proactive issue resolution boosts customer satisfaction",
-      },
-    ],
+    icon: "🌾",
+    title: "Wholesome Jain Specials",
+    description: "Prepared strictly without onion, garlic, or root vegetables, honoring absolute purity and non-violence values.",
+  },
+  {
+    icon: "🍧",
+    title: "Traditional Heritage Desserts",
+    description: "Slow-reduced milk, Kashmiri saffron, organic jaggery, and green cardamom sweet delicacies prepared fresh daily.",
+  },
+  {
+    icon: "🔥",
+    title: "Live Kitchen Experience",
+    description: "Witness the theater of hot naans leaving the clay ovens and local chefs tossing spices in our open hygiene kitchen.",
+  },
+  {
+    icon: "👑",
+    title: "Royal Private Dining",
+    description: "Immersive group dining setups curated with traditional tableware for family celebrations and private gatherings.",
   },
 ];
 
-const dashboards = [
+const strengths = [
   {
-    title: "Customer Portal",
-    icon: "📱",
-    description: "Seamless contactless ordering experience",
-    path: "/customer",
-    color: "border-brand-200 bg-brand-50 dark:border-brand-900/60 dark:bg-brand-950/20",
-    textColor: "text-brand-800 dark:text-brand-400",
-    features: [
-      "Browse pure-vegetarian menu with images",
-      "Filter by dietary preferences & allergies",
-      "Customize dishes in real-time",
-      "Live order status tracking",
-      "Digital feedback submission",
-    ],
+    title: "100% Pure & Organic",
+    desc: "Strictly vegetarian kitchen with hand-ground spices and absolutely no MSG or artificial food coloring.",
   },
   {
-    title: "Kitchen Display System",
-    icon: "👨‍🍳",
-    description: "Optimize food preparation workflow",
-    path: "/kitchen",
-    color: "border-orange-200 bg-orange-50 dark:border-orange-900/60 dark:bg-orange-950/20",
-    textColor: "text-orange-850 dark:text-orange-400",
-    features: [
-      "Priority-ordered ticket queue",
-      "Live preparation timers",
-      "Ingredient availability alerts",
-      "Order fulfillment status",
-      "Peak rush management tools",
-    ],
+    title: "Ancestral Recipes",
+    desc: "Passed down through generations, preserving the traditional medicinal benefits of Indian herbs.",
   },
   {
-    title: "Waiter Interface",
-    icon: "💼",
-    description: "Instant service alerts & coordination",
-    path: "/waiter",
-    color: "border-blue-200 bg-blue-50 dark:border-blue-900/60 dark:bg-blue-950/20",
-    textColor: "text-blue-800 dark:text-blue-400",
-    features: [
-      "Ready-to-serve food alerts",
-      "Table assignment mapping",
-      "Customer request notifications",
-      "Service speed optimization",
-      "Guest communication tools",
-    ],
+    title: "Daily Sourced Produce",
+    desc: "Sourced fresh from Jaipur's local organic farmers and sustainable vegetable cooperatives every morning.",
   },
   {
-    title: "Admin Dashboard",
-    icon: "📊",
-    description: "Real-time operational intelligence",
-    path: "/admin",
-    color: "border-purple-200 bg-purple-50 dark:border-purple-900/60 dark:bg-purple-950/20",
-    textColor: "text-purple-800 dark:text-purple-400",
-    features: [
-      "Floor-wide analytics overview",
-      "Table turnover metrics",
-      "Staff performance tracking",
-      "Revenue & order analytics",
-      "Sentiment trend monitoring",
-    ],
+    title: "Immaculate Hygiene",
+    desc: "Certified food handling with an open design that allows guests to view the entire cooking workflow.",
   },
 ];
 
-const businessBenefits = [
+const testimonials = [
   {
-    number: "1",
-    title: "Maximize Table Turnover",
-    description:
-      "Real-time order processing and kitchen synchronization dramatically reduce time between customer departure and table reset, enabling 15-20% more covers per service.",
-    metric: "+18% Revenue",
+    name: "Aishwarya Sharma",
+    role: "Local Food Critic",
+    review: "The Paneer Tikka was incredibly soft, and the heritage ambience transported me back to royal dining halls. An absolute gem in Jaipur.",
+    rating: 5,
   },
   {
-    number: "2",
-    title: "Optimize Staff Deployment",
-    description:
-      "Intelligent alerts and priority systems eliminate wait times for staff. Waiters spend more time delivering excellent service, less time searching for order status.",
-    metric: "30% Efficiency Gain",
+    name: "Rajesh Jain",
+    role: "Regular Visitor",
+    review: "Finding authentic Jain food that maintains this level of purity and rich heritage flavors is rare. Our family dining destination of choice.",
+    rating: 5,
   },
   {
-    number: "3",
-    title: "Capture Automated Insights",
-    description:
-      "AI sentiment analysis provides actionable, real-time feedback on service quality and kitchen performance, enabling immediate corrective action before negative reviews.",
-    metric: "40% Issue Detection",
+    name: "Sarah Jenkins",
+    role: "Culinary Travel Writer",
+    review: "The live kitchen experience was breathtaking, and the traditional hospitality was incredibly warm. Authentic recipes presented with elegance.",
+    rating: 5,
   },
-  {
-    number: "4",
-    title: "Eliminate Order Confusion",
-    description:
-      "Cryptographic table routing and real-time synchronization completely eliminate order mix-ups, reducing remakes and customer dissatisfaction to near-zero levels.",
-    metric: "99.9% Accuracy",
-  },
-  {
-    number: "5",
-    title: "Reduce Customer Wait Times",
-    description:
-      "From menu browsing to order delivery, customers experience frictionless, contactless service. Average wait time reduction of 90 seconds per order cycle.",
-    metric: "-90 Seconds",
-  },
-  {
-    number: "6",
-    title: "Protect Brand Reputation",
-    description:
-      "Proactive issue detection and instant resolution prevent negative experiences from becoming negative reviews. Improve online ratings and customer retention.",
-    metric: "↑ NPS Score",
-  },
+];
+
+const galleryImages = [
+  { src: "/ambika-pure-veg-img2.avif", alt: "Traditional Courtyard Dining" },
+  { src: "/ambika-pure-veg-img3.avif", alt: "Warm Royal Seating" },
+  { src: "/ambika-pure-veg-img4.avif", alt: "Signature Paneer Tikka Platter" },
+  { src: "/ambika-pure-veg-img5.avif", alt: "Heritage Inner Dining Hall" },
+  { src: "/ambika-pure-veg-img7.avif", alt: "Fresh Tandoori Breads" },
+  { src: "/ambika-pure-veg-img8.avif", alt: "Traditional Brass Tableware" },
 ];
 
 export default function Landing() {
+  const { isDark, toggleTheme } = useTheme();
+
+  // Booking Form State
+  const [bookingName, setBookingName] = useState("");
+  const [bookingDate, setBookingDate] = useState("");
+  const [bookingTime, setBookingTime] = useState("");
+  const [bookingGuests, setBookingGuests] = useState("2");
+  const [bookingSubmitted, setBookingSubmitted] = useState(false);
+
+  const handleBooking = (e) => {
+    e.preventDefault();
+    if (!bookingName || !bookingDate || !bookingTime) return;
+    setBookingSubmitted(true);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-brand-50 via-white to-warm-50 dark:from-brand-950/20 dark:via-stone-950 dark:to-stone-900 transition-colors duration-150">
+    <div className="relative min-h-screen bg-stone-50 dark:bg-[#120b08] text-[#3c241c] dark:text-[#f7f3ec] transition-colors duration-200">
+      
+      {/* Floating Theme Medallion */}
+      <button
+        onClick={toggleTheme}
+        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#d5b259] to-[#b69234] text-white shadow-xl hover:shadow-[#b69234]/30 hover:scale-110 active:scale-95 transition-all duration-300 border border-white/20 cursor-pointer"
+        title="Toggle Theme"
+        aria-label="Toggle Theme"
+      >
+        <span className="text-xl">{isDark ? "☀️" : "🌙"}</span>
+      </button>
+
       {/* ==================== HERO SECTION ==================== */}
-      <section className="relative overflow-hidden px-4 py-16 sm:px-6 sm:py-32">
-        <div className="mx-auto max-w-7xl">
-          {/* Logo Section */}
-          <div className="mb-8 flex justify-center">
+      <section className="relative h-screen w-full overflow-hidden flex items-center justify-center">
+        {/* Background Image with Dark Overlay */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center transition-transform duration-10000 ease-out scale-105"
+          style={{ backgroundImage: `url('/ambika-pure-veg-img1.webp')` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#120b08]/85 via-[#120b08]/75 to-[#120b08]/95" />
+
+        {/* Hero Content */}
+        <div className="relative z-10 mx-auto max-w-4xl px-4 text-center">
+          <div className="mb-6 flex justify-center animate-fade-in">
             <img
               src="/logo.png"
               alt="Ambika Pure Veg Logo"
-              className="h-24 w-24 rounded-full object-cover shadow-lg ring-4 ring-brand-200 dark:ring-brand-900"
+              className="h-28 w-28 rounded-full object-cover shadow-2xl ring-4 ring-[#b69234]/60 bg-white"
             />
           </div>
+          
+          <p className="font-serif text-sm font-semibold uppercase tracking-[0.3em] text-[#d5b259] mb-4">
+            Established 1995
+          </p>
 
-          {/* Main Headline & Subheadline */}
-          <div className="text-center">
-            <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-brand-600 dark:text-brand-400">
-              Smart Restaurant Operations Platform
-            </p>
+          <h1 className="font-serif text-5xl font-bold tracking-wide text-white sm:text-7xl lg:text-8xl mb-6 leading-tight">
+            Ambika Pure Veg
+          </h1>
 
-            <h1 className="text-5xl font-extrabold tracking-tight text-stone-900 dark:text-white sm:text-6xl lg:text-7xl">
-              Maximize Table Turnover.
-              <br />
-              <span className="text-brand-700 dark:text-brand-400">Optimize Operations.</span>
-              <br />
-              <span className="text-warm-600 dark:text-warm-450">Delight Guests.</span>
-            </h1>
+          <p className="font-serif text-lg italic text-[#decbba] mb-6 tracking-wider">
+            "A sanctuary of wholesome ancestral recipes & pure-vegetarian heritage."
+          </p>
 
-            <p className="mx-auto mt-8 max-w-3xl text-xl leading-relaxed text-stone-600 dark:text-stone-300">
-              Transform Ambika Pure Veg into a frictionless dining experience
-              with cryptographic table routing, real-time kitchen
-              synchronization, and AI-powered guest insights. Reduce customer
-              wait times by 90 seconds. Detect service issues 40% faster. Scale
-              operational efficiency without hiring more staff.
-            </p>
+          <p className="mx-auto max-w-2xl text-sm sm:text-base leading-relaxed text-stone-300 mb-10">
+            Immerse yourself in authentic Indian dining. We craft every dish with daily organic harvests, hand-milled spice grinds, and absolute culinary devotion. No artificial flavorings, just traditional purity.
+          </p>
 
-            {/* CTA Buttons */}
-            <div className="mt-10 flex flex-wrap justify-center gap-4">
-              <Link
-                to="/customer"
-                className="rounded-xl bg-brand-600 px-8 py-4 text-lg font-semibold text-white shadow-lg shadow-brand-200 transition hover:bg-brand-700 hover:shadow-xl dark:shadow-none"
-              >
-                Open Customer Portal
-              </Link>
-              <Link
-                to="/roi"
-                className="rounded-xl border-2 border-brand-300 bg-white px-8 py-4 text-lg font-semibold text-brand-700 transition hover:bg-brand-50 dark:border-brand-800 dark:bg-stone-900 dark:text-brand-400 dark:hover:bg-stone-850"
-              >
-                Calculate ROI
-              </Link>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <a
+              href="#booking"
+              className="rounded-lg bg-gradient-to-r from-[#b69234] to-[#d5b259] px-8 py-4 text-sm font-bold uppercase tracking-wider text-white shadow-lg transition-transform hover:-translate-y-0.5 active:translate-y-0"
+            >
+              Reserve A Table
+            </a>
+            <Link
+              to="/customer"
+              className="rounded-lg border-2 border-[#b69234] bg-[#120b08]/40 px-8 py-4 text-sm font-bold uppercase tracking-wider text-white hover:bg-gradient-to-r hover:from-[#b69234] hover:to-[#d5b259] hover:border-transparent transition-all duration-300"
+            >
+              Order Online / View Menu
+            </Link>
+          </div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-stone-400">
+          <span className="text-[10px] uppercase tracking-widest text-[#d5b259]">Scroll to explore</span>
+          <div className="h-8 w-[1px] bg-gradient-to-b from-[#d5b259] to-transparent animate-pulse" />
+        </div>
+      </section>
+
+      {/* ==================== ABOUT US SECTION ==================== */}
+      <section id="about" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="grid gap-12 lg:grid-cols-2 items-center">
+          
+          {/* Left Text Block */}
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <span className="text-xs uppercase tracking-widest text-[#b69234] font-semibold">Our Origin Story</span>
+              <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-wide text-[#3c241c] dark:text-white">
+                Three Decades of Purity
+              </h2>
+              <div className="h-[2px] w-20 bg-[#b69234]" />
             </div>
-          </div>
+            
+            <p className="text-base sm:text-lg leading-relaxed text-[#5c443c] dark:text-[#decbba]">
+              Founded in the heritage heartland of Rajasthan in 1995, Ambika Pure Veg was born from a singular vision: to serve traditional, wholesome Indian cuisine that honors the body and respects the soul.
+            </p>
+            <p className="text-sm leading-relaxed text-stone-600 dark:text-[#a48d7e]">
+              We reject modern shortcuts. Our kitchen does not utilize processed ingredients, artificial preservatives, or chemical coloring. Spices are hand-ground in mortar pestles every morning, wheat is stone-milled to preserve its nutrients, and fresh produce is sourced before sunrise from Jaipur's local farmers.
+            </p>
 
-          {/* Key Metrics Grid */}
-          <div className="mt-16 grid gap-6 sm:grid-cols-3">
-            {keyMetrics.map((stat) => (
-              <StatCard
-                key={stat.label}
-                value={stat.value}
-                label={stat.label}
-                description={stat.description}
-                icon={stat.icon}
-              />
-            ))}
-          </div>
-
-          {/* Visual Representation Area */}
-          <div className="mt-16 rounded-3xl border-2 border-dashed border-brand-300 bg-gradient-to-b from-brand-50 to-white p-12 dark:border-brand-800 dark:from-brand-950/20 dark:to-stone-900">
-            <div className="text-center">
-              <p className="mb-6 text-sm font-medium text-stone-600 dark:text-stone-300">
-                ✨ Synchronized Multi-Role Dashboard Ecosystem
-              </p>
-              <div className="flex flex-wrap justify-center gap-3">
-                {dashboards.map((dashboard) => (
-                  <div
-                    key={dashboard.title}
-                    className="animate-pulse-ring rounded-full bg-brand-600 px-5 py-3 text-xs font-bold text-white shadow-lg"
-                  >
-                    {dashboard.icon} {dashboard.title}
-                  </div>
-                ))}
+            <div className="grid gap-6 sm:grid-cols-3 pt-6">
+              <div className="rounded-xl bg-white dark:bg-[#1c120e] p-4 border border-stone-200 dark:border-stone-850 text-center shadow-sm">
+                <p className="font-serif text-3xl font-bold text-[#b69234]">1995</p>
+                <p className="text-xs uppercase tracking-wider text-stone-500 dark:text-[#decbba] mt-1">Year Founded</p>
               </div>
-              <p className="mt-8 text-xs text-stone-500 dark:text-stone-400">
-                Powered by Cryptographic QR Tokens • Socket.io Real-Time
-                Pipelines • PyTorch AI Sentiment Engine
-              </p>
+              <div className="rounded-xl bg-white dark:bg-[#1c120e] p-4 border border-stone-200 dark:border-stone-850 text-center shadow-sm">
+                <p className="font-serif text-3xl font-bold text-[#b69234]">100%</p>
+                <p className="text-xs uppercase tracking-wider text-stone-500 dark:text-[#decbba] mt-1">Vegetarian</p>
+              </div>
+              <div className="rounded-xl bg-white dark:bg-[#1c120e] p-4 border border-stone-200 dark:border-stone-850 text-center shadow-sm">
+                <p className="font-serif text-3xl font-bold text-[#b69234]">Zero</p>
+                <p className="text-xs uppercase tracking-wider text-stone-500 dark:text-[#decbba] mt-1">MSG / Preservatives</p>
+              </div>
             </div>
           </div>
+
+          {/* Right Image Block */}
+          <div className="relative">
+            <div className="absolute -inset-2 rounded-2xl border-2 border-dashed border-[#b69234]/30" />
+            <img
+              src="/ambika-pure-veg-img2.avif"
+              alt="Ambika Courtyard Dining"
+              className="relative z-10 w-full rounded-xl object-cover shadow-2xl transition-transform duration-500 hover:scale-[1.02]"
+            />
+            {/* Absolute badge */}
+            <div className="absolute -bottom-6 -left-6 z-20 rounded-2xl bg-gradient-to-br from-[#d5b259] to-[#b69234] p-6 text-white shadow-xl hidden sm:block">
+              <p className="font-serif text-xl font-bold">Raghavan</p>
+              <p className="text-xs uppercase tracking-widest text-[#fdfbf7] opacity-80">Founder & Chief Chef</p>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Mission Vision Values Cards */}
+        <div className="grid gap-6 sm:grid-cols-3 mt-20">
+          <div className="rounded-2xl bg-white dark:bg-[#1c120e] p-8 border border-stone-200 dark:border-stone-850 shadow-sm space-y-4 hover:shadow-md transition-shadow">
+            <span className="text-3xl">🕊️</span>
+            <h3 className="font-serif text-xl font-bold text-[#3c241c] dark:text-white">Our Mission</h3>
+            <p className="text-sm leading-relaxed text-stone-600 dark:text-[#decbba]">
+              To serve authentic, organic, pure-vegetarian recipes prepared strictly with ancient culinary traditions that feed the body and bring peace to the mind.
+            </p>
+          </div>
+          <div className="rounded-2xl bg-white dark:bg-[#1c120e] p-8 border border-stone-200 dark:border-stone-850 shadow-sm space-y-4 hover:shadow-md transition-shadow">
+            <span className="text-3xl">🏺</span>
+            <h3 className="font-serif text-xl font-bold text-[#3c241c] dark:text-white">Our Vision</h3>
+            <p className="text-sm leading-relaxed text-stone-600 dark:text-[#decbba]">
+              To preserve ancestral Indian culinary heritages, keeping traditional vegetarian cooking methods alive for future generations in an atmosphere of royal comfort.
+            </p>
+          </div>
+          <div className="rounded-2xl bg-white dark:bg-[#1c120e] p-8 border border-stone-200 dark:border-stone-850 shadow-sm space-y-4 hover:shadow-md transition-shadow">
+            <span className="text-3xl">☀️</span>
+            <h3 className="font-serif text-xl font-bold text-[#3c241c] dark:text-white">Core Values</h3>
+            <p className="text-sm leading-relaxed text-stone-600 dark:text-[#decbba]">
+              Absolute Purity (100% natural, no additives), Ancient Authenticity, Respect for Life (non-violence & full Jain support), and Heartfelt Hospitality.
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* ==================== CORE FEATURES SECTION ==================== */}
-      <section id="features" className="bg-white dark:bg-stone-950 px-4 py-20 sm:px-6 transition-colors duration-150">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-16 text-center">
-            <h2 className="text-4xl font-bold text-stone-900 dark:text-stone-100">
-              The Technical Foundation
+      {/* ==================== OUR TIMELINE SECTION ==================== */}
+      <section className="bg-stone-100 dark:bg-[#1c120e] py-24 px-4 sm:px-6 transition-colors duration-150">
+        <div className="max-w-5xl mx-auto">
+          <div className="mb-16 text-center space-y-2">
+            <span className="text-xs uppercase tracking-widest text-[#b69234] font-semibold">Our Journey</span>
+            <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-wide text-[#3c241c] dark:text-white">
+              The Heritage Timeline
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-stone-600 dark:text-stone-400">
-              Three pillars of operational excellence, proven to transform
-              high-volume restaurant management
-            </p>
+            <div className="h-[2px] w-20 bg-[#b69234] mx-auto" />
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-3">
-            {coreFeatures.map((feature) => (
-              <FeatureCard
-                key={feature.id}
-                icon={feature.icon}
-                badge={feature.badge}
-                title={feature.title}
-                description={feature.description}
-                points={feature.points}
-                highlight={feature.highlight}
-              />
+          {/* Timeline Wrapper */}
+          <div className="relative border-l border-stone-300 dark:border-stone-800 ml-4 sm:ml-32 pl-8 sm:pl-12 space-y-12">
+            {timelineEvents.map((event, idx) => (
+              <div key={idx} className="relative group">
+                {/* Year tag left aligned on desktops */}
+                <div className="absolute -left-[45px] sm:-left-[185px] top-0.5 text-center hidden sm:block w-32">
+                  <span className="font-serif text-2xl font-bold text-[#b69234] group-hover:scale-105 inline-block transition-transform">
+                    {event.year}
+                  </span>
+                </div>
+
+                {/* Dot indicator */}
+                <div className="absolute -left-[41px] sm:-left-[57px] top-2 h-4 w-4 rounded-full bg-[#b69234] border-4 border-stone-100 dark:border-[#1c120e] group-hover:scale-125 transition-transform" />
+
+                {/* Mobile Year Badge */}
+                <span className="font-serif text-lg font-bold text-[#b69234] block sm:hidden mb-1">
+                  {event.year}
+                </span>
+
+                <div className="rounded-2xl bg-white dark:bg-[#271a15] p-6 border border-stone-250/60 dark:border-stone-800 shadow-sm group-hover:shadow-md transition-shadow">
+                  <h3 className="font-serif text-xl font-bold text-[#3c241c] dark:text-white mb-2">
+                    {event.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-stone-600 dark:text-[#decbba]">
+                    {event.description}
+                  </p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ==================== 4 OPERATIONAL DASHBOARDS SECTION ==================== */}
-      <section
-        id="roles"
-        className="bg-gradient-to-b from-stone-50 to-white dark:from-stone-900 dark:to-stone-950 px-4 py-20 sm:px-6 transition-colors duration-150"
-      >
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-16 text-center">
-            <h2 className="text-4xl font-bold text-stone-900 dark:text-stone-100">
-              Four Unified Dashboards
+      {/* ==================== OWNER SECTION ==================== */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="grid gap-12 lg:grid-cols-2 items-center">
+          
+          {/* Portrait Container with Gold frame effect */}
+          <div className="relative max-w-md mx-auto lg:mx-0">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#d5b259] to-[#b69234] translate-x-4 translate-y-4" />
+            <div className="relative z-10 overflow-hidden rounded-2xl border-4 border-white dark:border-[#120b08] shadow-2xl">
+              <img
+                src="/ambika-pure-veg-img6.jpg"
+                alt="Chef Raghavan, Founder"
+                className="w-full h-[500px] object-cover object-center transition-transform duration-700 hover:scale-105"
+              />
+            </div>
+          </div>
+
+          {/* Biography Block */}
+          <div className="space-y-6">
+            <span className="text-xs uppercase tracking-widest text-[#b69234] font-semibold">The Master Chef</span>
+            <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-wide text-[#3c241c] dark:text-white">
+              Chef Raghavan
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-stone-600 dark:text-stone-400">
-              Each role experiences a perfectly orchestrated interface, powered
-              by shared real-time data and cryptographic routing
+            <div className="h-[2px] w-20 bg-[#b69234]" />
+
+            <div className="relative bg-stone-100 dark:bg-[#1c120e] p-6 rounded-2xl border-l-4 border-[#b69234] italic text-[#5c443c] dark:text-[#decbba] text-base leading-relaxed">
+              <span className="absolute top-2 left-2 text-5xl text-[#b69234]/20 font-serif">“</span>
+              <p className="relative z-10 pl-4">
+                Cooking is not just the assembly of ingredients. It is a sacred art, a devotion to health, and a pure offering to the divine spark in every guest who graces our tables.
+              </p>
+            </div>
+
+            <p className="text-sm leading-relaxed text-stone-600 dark:text-[#a48d7e]">
+              For over thirty-five years, Chef Raghavan travelled the subcontinental hinterlands, learning the secret spice blends of rural grandmothers and the culinary disciplines of royal temples. At Ambika, he applies these ancestral techniques with modern precision, personally overseeing the spice grinding every single morning.
+            </p>
+            <p className="text-sm leading-relaxed text-stone-600 dark:text-[#a48d7e]">
+              Under his guidance, our kitchen preserves ancient secrets of ayurvedic cooking—ensuring that every meal is not just delicious but deeply nourishing and easy to digest.
             </p>
           </div>
 
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {dashboards.map((dashboard) => (
-              <DashboardCard
-                key={dashboard.title}
-                title={dashboard.title}
-                icon={dashboard.icon}
-                description={dashboard.description}
-                features={dashboard.features}
-                path={dashboard.path}
-                color={dashboard.color}
-                textColor={dashboard.textColor}
-              />
-            ))}
-          </div>
         </div>
       </section>
 
-      {/* ==================== BUSINESS BENEFITS SECTION ==================== */}
-      <section id="benefits" className="bg-white dark:bg-stone-950 px-4 py-20 sm:px-6 transition-colors duration-150">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-16 text-center">
-            <h2 className="text-4xl font-bold text-stone-900 dark:text-stone-100">
-              Business Impact & ROI
+      {/* ==================== SPECIALITIES SECTION ==================== */}
+      <section id="specialities" className="bg-[#f5efe4] dark:bg-[#1c120e] py-24 px-4 sm:px-6 transition-colors duration-150">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-16 text-center space-y-2">
+            <span className="text-xs uppercase tracking-widest text-[#b69234] font-semibold">Culinary Highlights</span>
+            <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-wide text-[#3c241c] dark:text-white">
+              Our House Specialities
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-stone-600 dark:text-stone-400">
-              Concrete operational improvements that directly impact your bottom
-              line
-            </p>
+            <div className="h-[2px] w-20 bg-[#b69234] mx-auto" />
           </div>
 
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {businessBenefits.map((benefit) => (
-              <BenefitCard
-                key={benefit.number}
-                number={benefit.number}
-                title={benefit.title}
-                description={benefit.description}
-                metric={benefit.metric}
-              />
+            {specialities.map((spec, idx) => (
+              <div 
+                key={idx} 
+                className="group rounded-2xl bg-white dark:bg-[#271a15] p-8 border border-stone-200/50 dark:border-stone-800 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+              >
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-[#fdfaf2] dark:bg-[#1c120e] text-3xl shadow-inner group-hover:scale-110 transition-transform">
+                  {spec.icon}
+                </div>
+                <h3 className="font-serif text-xl font-bold text-[#3c241c] dark:text-white mb-2">
+                  {spec.title}
+                </h3>
+                <p className="text-sm leading-relaxed text-stone-600 dark:text-[#decbba]">
+                  {spec.description}
+                </p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ==================== TECHNICAL ARCHITECTURE SECTION ==================== */}
-      {/* ==================== TECHNICAL ARCHITECTURE SECTION ==================== */}
-      <section className="bg-gradient-to-b from-stone-50 to-white dark:from-stone-900 dark:to-stone-950 px-4 py-20 sm:px-6 transition-colors duration-150">
-        <div className="mx-auto max-w-7xl">
-          <div className="rounded-2xl border-2 border-brand-300 bg-gradient-to-r from-brand-50 to-warm-50 dark:border-brand-800 dark:from-brand-950/20 dark:to-stone-900 p-12">
-            <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
-              {/* Left Content */}
-              <div>
-                <h2 className="text-3xl font-bold text-stone-900 dark:text-stone-100">
-                  Enterprise-Grade Architecture
-                </h2>
-                <p className="mt-4 leading-relaxed text-stone-600 dark:text-stone-300">
-                  Built from the ground up for high-volume, fast-paced
-                  restaurant environments. Our stack combines cutting-edge
-                  security, real-time responsiveness, and intelligent
-                  automation.
-                </p>
-
-                <div className="mt-8 space-y-4">
-                  <div className="rounded-lg bg-white dark:bg-stone-900 p-4 shadow-sm">
-                    <h4 className="font-bold text-stone-900 dark:text-stone-100">
-                      🔐 Security Layer
-                    </h4>
-                    <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
-                      Cryptographic token validation, end-to-end encryption, and
-                      role-based access control
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-white dark:bg-stone-900 p-4 shadow-sm">
-                    <h4 className="font-bold text-stone-900 dark:text-stone-100">
-                      ⚡ Real-Time Layer
-                    </h4>
-                    <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
-                      Socket.io bidirectional pipelines with sub-100ms latency
-                      across all nodes
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-white dark:bg-stone-900 p-4 shadow-sm">
-                    <h4 className="font-bold text-stone-900 dark:text-stone-100">
-                      🤖 Intelligence Layer
-                    </h4>
-                    <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
-                      PyTorch NLP models for sentiment analysis and automated
-                      issue detection
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-white dark:bg-stone-900 p-4 shadow-sm">
-                    <h4 className="font-bold text-stone-900 dark:text-stone-100">
-                      📊 Analytics Layer
-                    </h4>
-                    <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
-                      Real-time dashboards with operational KPIs, revenue
-                      tracking, and performance metrics
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Content - Tech Stack */}
-              <div>
-                <h3 className="text-2xl font-bold text-stone-900 dark:text-stone-100">
-                  Modern Tech Stack
-                </h3>
-
-                <div className="mt-8 space-y-4">
-                  <div className="rounded-xl bg-white dark:bg-stone-900 p-6 shadow-sm">
-                    <h4 className="font-bold text-brand-700 dark:text-brand-400">Frontend</h4>
-                    <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
-                      React 19 with Tailwind CSS for responsive, accessible
-                      interfaces
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-white dark:bg-stone-900 p-6 shadow-sm">
-                    <h4 className="font-bold text-brand-700 dark:text-brand-400">Backend</h4>
-                    <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
-                      Node.js/Express with persistent Socket.io connections
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-white dark:bg-stone-900 p-6 shadow-sm">
-                    <h4 className="font-bold text-brand-700 dark:text-brand-400">Database</h4>
-                    <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
-                      MongoDB for flexible, scalable document storage
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-white dark:bg-stone-900 p-6 shadow-sm">
-                    <h4 className="font-bold text-brand-700 dark:text-brand-400">AI/ML</h4>
-                    <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
-                      PyTorch sentiment analysis pipeline for real-time feedback
-                      processing
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ==================== IMPLEMENTATION TIMELINE SECTION ==================== */}
-      <section className="bg-white dark:bg-stone-950 px-4 py-20 sm:px-6 transition-colors duration-150">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-16 text-center">
-            <h2 className="text-4xl font-bold text-stone-900 dark:text-stone-100">
-              Ready to Transform Your Operations?
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-stone-600 dark:text-stone-400">
-              Get started with a personalized demo and ROI analysis for Ambika
-              Pure Veg
-            </p>
-          </div>
-
-          <div className="grid gap-8 sm:grid-cols-3">
-            <div className="rounded-2xl border border-stone-200 bg-white p-8 text-center shadow-sm dark:border-stone-850 dark:bg-stone-900">
-              <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/65 text-2xl">
-                📋
-              </span>
-              <h3 className="mt-4 text-xl font-bold text-stone-900 dark:text-stone-100">
-                Schedule Demo
-              </h3>
-              <p className="mt-3 text-sm leading-relaxed text-stone-600 dark:text-stone-300">
-                Experience all four dashboards with live data showcasing real
-                restaurant operations
-              </p>
-              <Link
-                to="/login"
-                className="mt-4 inline-block font-semibold text-brand-700 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300"
-              >
-                Book Now →
-              </Link>
-            </div>
-
-            <div className="rounded-2xl border border-stone-200 bg-white p-8 text-center shadow-sm dark:border-stone-850 dark:bg-stone-900">
-              <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/65 text-2xl">
-                💰
-              </span>
-              <h3 className="mt-4 text-xl font-bold text-stone-900 dark:text-stone-100">
-                Calculate ROI
-              </h3>
-              <p className="mt-3 text-sm leading-relaxed text-stone-600 dark:text-stone-300">
-                Input your metrics and see projected revenue impact, cost
-                savings, and payback period
-              </p>
-              <Link
-                to="/roi"
-                className="mt-4 inline-block font-semibold text-brand-700 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300"
-              >
-                Calculate →
-              </Link>
-            </div>
-
-            <div className="rounded-2xl border border-stone-200 bg-white p-8 text-center shadow-sm dark:border-stone-850 dark:bg-stone-900">
-              <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/65 text-2xl">
-                💬
-              </span>
-              <h3 className="mt-4 text-xl font-bold text-stone-900 dark:text-stone-100">
-                Get Support
-              </h3>
-              <p className="mt-3 text-sm leading-relaxed text-stone-600 dark:text-stone-300">
-                Dedicated onboarding team ensures smooth implementation and
-                staff training
-              </p>
-              <a
-                href="mailto:support@ambikarestaurant.com"
-                className="mt-4 inline-block font-semibold text-brand-700 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300"
-              >
-                Contact Us →
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ==================== CLOSING CTA SECTION ==================== */}
-      <section className="bg-gradient-to-r from-brand-700 to-brand-800 px-4 py-20 sm:px-6">
-        <div className="mx-auto max-w-4xl text-center">
-          <h2 className="text-4xl font-bold text-white">
-            Stop Leaving Money on the Table
+      {/* ==================== AMBIENCE GALLERY SECTION ==================== */}
+      <section id="ambience" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="mb-16 text-center space-y-2">
+          <span className="text-xs uppercase tracking-widest text-[#b69234] font-semibold">Visual Sanctuary</span>
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-wide text-[#3c241c] dark:text-white">
+            Our Ambience & Gallery
           </h2>
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-brand-100">
-            Every minute of wasted customer time is lost revenue. Every order
-            mix-up is a damaged reputation. Every service bottleneck is a missed
-            opportunity to impress. The Ambika Pure Veg Smart Platform
-            eliminates all three.
-          </p>
-          <div className="mt-10 flex flex-wrap justify-center gap-4">
-            <Link
-              to="/login"
-              className="rounded-xl bg-white px-8 py-4 font-semibold text-brand-700 shadow-lg transition hover:shadow-xl hover:scale-105"
+          <div className="h-[2px] w-20 bg-[#b69234] mx-auto" />
+        </div>
+
+        {/* Gallery Grid */}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {galleryImages.map((img, idx) => (
+            <div 
+              key={idx} 
+              className="relative overflow-hidden rounded-2xl group shadow-md"
             >
-              Staff Login
-            </Link>
-            <Link
-              to="/roi"
-              className="rounded-xl border-2 border-white bg-transparent px-8 py-4 font-semibold text-white transition hover:bg-white hover:text-brand-700"
+              {/* Image */}
+              <img
+                src={img.src}
+                alt={img.alt}
+                className="w-full h-72 object-cover object-center transition-transform duration-700 group-hover:scale-110"
+              />
+              {/* Overlay on hover */}
+              <div className="absolute inset-0 bg-[#120b08]/80 opacity-0 group-hover:opacity-100 flex items-center justify-center p-6 text-center transition-opacity duration-300">
+                <div>
+                  <h4 className="font-serif text-lg font-bold text-[#d5b259]">{img.alt}</h4>
+                  <p className="text-xs text-stone-300 mt-2 uppercase tracking-widest">Ambika Pure Veg</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ==================== WHY CHOOSE US ==================== */}
+      <section className="bg-stone-100 dark:bg-[#1c120e] py-24 px-4 sm:px-6 transition-colors duration-150">
+        <div className="max-w-7xl mx-auto grid gap-12 lg:grid-cols-2 items-center">
+          
+          {/* Left Text Block */}
+          <div className="space-y-6">
+            <span className="text-xs uppercase tracking-widest text-[#b69234] font-semibold">Unmatched Excellence</span>
+            <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-wide text-[#3c241c] dark:text-white">
+              Why Dining at Ambika is Sacred
+            </h2>
+            <div className="h-[2px] w-20 bg-[#b69234]" />
+            <p className="text-sm sm:text-base leading-relaxed text-stone-600 dark:text-[#decbba]">
+              We treat guest hospitality as a devotional pathway, ensuring every element of ingredients, hygiene, atmosphere, and service is curated with strict integrity.
+            </p>
+            <div className="grid gap-6 sm:grid-cols-2 pt-4">
+              {strengths.map((str, idx) => (
+                <div key={idx} className="space-y-1">
+                  <h4 className="font-serif text-lg font-bold text-[#3c241c] dark:text-white flex items-center gap-2">
+                    <span className="text-[#b69234]">✦</span> {str.title}
+                  </h4>
+                  <p className="text-xs text-stone-500 dark:text-[#a48d7e] leading-relaxed">
+                    {str.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right Image with borders */}
+          <div className="relative">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#d5b259] to-[#b69234] translate-x-4 -translate-y-4" />
+            <img
+              src="/ambika-pure-veg-img5.avif"
+              alt="Ambika Dining Interior"
+              className="relative z-10 w-full h-[400px] object-cover rounded-2xl shadow-2xl"
+            />
+          </div>
+
+        </div>
+      </section>
+
+      {/* ==================== TESTIMONIALS SECTION ==================== */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="mb-16 text-center space-y-2">
+          <span className="text-xs uppercase tracking-widest text-[#b69234] font-semibold">Voices of Delight</span>
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-wide text-[#3c241c] dark:text-white">
+            Guest Testimonials
+          </h2>
+          <div className="h-[2px] w-20 bg-[#b69234] mx-auto" />
+        </div>
+
+        <div className="grid gap-8 sm:grid-cols-3">
+          {testimonials.map((test, idx) => (
+            <div 
+              key={idx}
+              className="rounded-2xl bg-white dark:bg-[#1c120e] p-8 border border-stone-200 dark:border-stone-850 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow"
             >
-              See Your ROI
-            </Link>
+              <div className="space-y-4">
+                {/* Gold Stars */}
+                <div className="flex text-[#d5b259]">
+                  {Array.from({ length: test.rating }).map((_, i) => (
+                    <span key={i} className="text-lg">★</span>
+                  ))}
+                </div>
+                <p className="text-sm leading-relaxed italic text-[#5c443c] dark:text-[#decbba]">
+                  “{test.review}”
+                </p>
+              </div>
+              <div className="border-t border-stone-100 dark:border-stone-800/80 pt-4 mt-6">
+                <p className="font-serif font-bold text-[#3c241c] dark:text-white">{test.name}</p>
+                <p className="text-xs text-stone-400 dark:text-[#a48d7e]">{test.role}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ==================== RESERVATION CTA SECTION ==================== */}
+      <section id="booking" className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden flex items-center justify-center">
+        {/* Background Image with Dark Overlay */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url('/ambika-pure-veg-img3.avif')` }}
+        />
+        <div className="absolute inset-0 bg-[#120b08]/85" />
+
+        {/* Content Container */}
+        <div className="relative z-10 mx-auto max-w-lg w-full">
+          <div className="rounded-3xl bg-[#fdfbf7] dark:bg-[#1c120e] p-8 sm:p-10 shadow-2xl border border-[#e6dcce] dark:border-stone-800 text-[#3c241c] dark:text-[#f7f3ec] transition-colors duration-150">
+            
+            <div className="text-center mb-6 space-y-2">
+              <span className="text-xs uppercase tracking-widest text-[#b69234] font-semibold">Reserve A Table</span>
+              <h3 className="font-serif text-3xl font-bold tracking-wide">Table Reservations</h3>
+              <div className="h-[2px] w-12 bg-[#b69234] mx-auto" />
+            </div>
+
+            {bookingSubmitted ? (
+              <div className="text-center py-8 space-y-4">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100 dark:bg-green-950/40 text-green-600 text-3xl animate-bounce">
+                  ✓
+                </div>
+                <h4 className="font-serif text-xl font-semibold">Booking Request Received</h4>
+                <p className="text-sm text-stone-500 dark:text-[#decbba]">
+                  Thank you, <span className="font-bold text-[#b69234]">{bookingName}</span>. We have provisionally reserved a table for <span className="font-bold text-[#b69234]">{bookingGuests} guests</span> on <span className="font-bold text-[#b69234]">{bookingDate}</span> at <span className="font-bold text-[#b69234]">{bookingTime}</span>.
+                </p>
+                <p className="text-xs text-stone-400">Our host will call you shortly to confirm the reservation.</p>
+                <button
+                  onClick={() => setBookingSubmitted(false)}
+                  className="mt-4 text-xs font-semibold text-[#b69234] hover:underline"
+                >
+                  Book another table
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleBooking} className="space-y-4 text-sm">
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-stone-500 dark:text-[#decbba] mb-1.5 font-medium">
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={bookingName}
+                    onChange={(e) => setBookingName(e.target.value)}
+                    className="w-full rounded-lg border border-stone-200 dark:border-stone-850 px-4 py-3 bg-white dark:bg-stone-900 outline-none focus:border-[#b69234] dark:text-stone-100"
+                    placeholder="Enter your name"
+                  />
+                </div>
+                
+                <div className="grid gap-4 grid-cols-2">
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider text-stone-500 dark:text-[#decbba] mb-1.5 font-medium">
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={bookingDate}
+                      onChange={(e) => setBookingDate(e.target.value)}
+                      className="w-full rounded-lg border border-stone-200 dark:border-stone-850 px-4 py-3 bg-white dark:bg-stone-900 outline-none focus:border-[#b69234] dark:text-stone-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider text-stone-500 dark:text-[#decbba] mb-1.5 font-medium">
+                      Time
+                    </label>
+                    <input
+                      type="time"
+                      required
+                      value={bookingTime}
+                      onChange={(e) => setBookingTime(e.target.value)}
+                      className="w-full rounded-lg border border-stone-200 dark:border-stone-850 px-4 py-3 bg-white dark:bg-stone-900 outline-none focus:border-[#b69234] dark:text-stone-100"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-stone-500 dark:text-[#decbba] mb-1.5 font-medium">
+                    Number of Guests
+                  </label>
+                  <select
+                    value={bookingGuests}
+                    onChange={(e) => setBookingGuests(e.target.value)}
+                    className="w-full rounded-lg border border-stone-200 dark:border-stone-850 px-4 py-3 bg-white dark:bg-stone-900 outline-none focus:border-[#b69234] dark:text-stone-100"
+                  >
+                    {["1", "2", "3", "4", "5", "6", "7", "8+"].map((num) => (
+                      <option key={num} value={num}>
+                        {num} {Number(num) === 1 ? "Guest" : "Guests"}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full rounded-lg bg-gradient-to-r from-[#b69234] to-[#d5b259] py-4 text-sm font-bold uppercase tracking-wider text-white shadow-md hover:shadow-lg transition-transform hover:-translate-y-0.5 active:translate-y-0 mt-6 cursor-pointer"
+                >
+                  Request Royal Table
+                </button>
+              </form>
+            )}
+
+            <div className="mt-6 border-t border-stone-100 dark:border-stone-800/80 pt-6 text-center">
+              <p className="text-xs text-stone-400 dark:text-[#a48d7e]">Prefer to order to your table directly?</p>
+              <Link
+                to="/customer"
+                className="mt-2 inline-block text-xs font-bold uppercase tracking-wider text-[#b69234] hover:text-[#9a7827] transition-colors"
+              >
+                ⚡ Start Online Table Order →
+              </Link>
+            </div>
+
           </div>
         </div>
       </section>
 
-      {/* ==================== FOOTER ==================== */}
-      <Footer />
     </div>
   );
 }
