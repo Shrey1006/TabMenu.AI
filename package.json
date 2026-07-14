@@ -1,0 +1,12 @@
+{
+  "name": "tabmenu-ai",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "seed": "cd backend && npm run seed",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:ai": "cd ai-service && python -m uvicorn main:app --reload --port 8000"
+  }
+}

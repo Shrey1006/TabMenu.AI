@@ -1,0 +1,89 @@
+version: "3.8"
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: ambika_mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: ambika_pure_veg
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - ambika_network
+
+  # Backend API Server
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ambika_backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/ambika_pure_veg
+      JWT_SECRET: ${JWT_SECRET:-ambika_super_secret_change_in_production}
+      QR_SECRET: ${QR_SECRET:-ambika_qr_hmac_secret_key}
+      AI_SERVICE_URL: http://ai-service:8000
+      CLIENT_URL: http://localhost:5173
+    depends_on:
+      - mongodb
+    networks:
+      - ambika_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Frontend Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ambika_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:5000
+      VITE_SOCKET_IO_URL: http://localhost:5000
+    depends_on:
+      - backend
+    networks:
+      - ambika_network
+
+  # AI Service (Optional)
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: ambika_ai_service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: 8000
+    networks:
+      - ambika_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  ambika_network:
+    driver: bridge
