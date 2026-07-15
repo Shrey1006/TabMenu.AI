@@ -11,6 +11,7 @@ function KitchenBoard() {
   const socket = useSocket();
   const { isDark, toggleTheme } = useTheme();
   const [orders, setOrders] = useState([]);
+  const [showServed, setShowServed] = useState(false);
 
   const load = () => api.get("/orders/active").then((r) => setOrders(r.data));
 
@@ -47,7 +48,9 @@ function KitchenBoard() {
   );
   
   const servedOrders = orders.filter(o => 
-    ["ready_to_serve", "ready", "served"].includes(o.status)
+    showServed
+      ? ["ready_to_serve", "ready", "served"].includes(o.status)
+      : ["ready_to_serve", "ready"].includes(o.status)
   );
 
   const sortedOrdered = [...orderedOrders].sort((a, b) => {
@@ -143,8 +146,8 @@ function KitchenBoard() {
   };
 
   return (
-    <div className="min-h-screen bg-espresso-950 text-espresso-50 transition-colors duration-150">
-      <header className="border-b border-espresso-800 bg-espresso-900/90 px-6 py-4 backdrop-blur-md">
+    <div className="min-h-screen bg-cream-50 dark:bg-espresso-950 text-chocolate-900 dark:text-espresso-50 transition-colors duration-150">
+      <header className="border-b border-cream-200 dark:border-espresso-800 bg-white dark:bg-espresso-900/90 px-6 py-4 backdrop-blur-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img
@@ -153,8 +156,8 @@ function KitchenBoard() {
               className="h-10 w-10 rounded-full object-cover ring-2 ring-gold-500/40 bg-white"
             />
             <div>
-              <h1 className="font-serif text-lg font-bold tracking-wide text-white">Kitchen Dashboard</h1>
-              <p className="text-xs uppercase tracking-wider text-gold-400 font-medium">
+              <h1 className="font-serif text-lg font-bold tracking-wide text-chocolate-900 dark:text-white">Kitchen Dashboard</h1>
+              <p className="text-xs uppercase tracking-wider text-gold-600 dark:text-gold-400 font-medium">
                 Live order pipeline · Socket.io
               </p>
             </div>
@@ -162,11 +165,11 @@ function KitchenBoard() {
           <div className="flex items-center gap-3">
             <button
               onClick={toggleTheme}
-              className="rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider bg-espresso-800 border border-espresso-700 text-espresso-50 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              className="rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider bg-cream-100 dark:bg-espresso-800 border border-cream-200 dark:border-espresso-700 text-chocolate-850 dark:text-espresso-50 hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               {isDark ? "☀️ Light" : "🌙 Dark"}
             </button>
-            <span className="rounded-full bg-gold-500/20 px-3 py-1 text-xs font-bold text-gold-400 border border-gold-500/30">
+            <span className="rounded-full bg-gold-500/20 px-3 py-1 text-xs font-bold text-gold-650 dark:text-gold-400 border border-gold-500/30">
               {orders.length} active
             </span>
             <Link to="/" className="rounded-lg border border-gold-500 px-4 py-2 text-xs font-bold uppercase tracking-wider text-gold-500 hover:bg-gold-500 hover:text-white transition-all cursor-pointer">
@@ -179,11 +182,11 @@ function KitchenBoard() {
       <div className="grid gap-8 p-6 lg:grid-cols-2">
         {/* Ordered / Cooking Section */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-espresso-800 pb-3">
-            <h2 className="font-serif text-lg font-bold text-white flex items-center gap-2">
+          <div className="flex items-center justify-between border-b border-cream-200 dark:border-espresso-800 pb-3">
+            <h2 className="font-serif text-lg font-bold text-chocolate-950 dark:text-white flex items-center gap-2">
               <span>🍳</span> Ordered & Cooking
             </h2>
-            <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-xs font-bold text-amber-400 border border-amber-500/30">
+            <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-400 border border-amber-500/30">
               {sortedOrdered.length} tickets
             </span>
           </div>
@@ -199,13 +202,25 @@ function KitchenBoard() {
 
         {/* Ready / Served Section */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-espresso-800 pb-3">
-            <h2 className="font-serif text-lg font-bold text-white flex items-center gap-2">
+          <div className="flex items-center justify-between border-b border-cream-200 dark:border-espresso-800 pb-3">
+            <h2 className="font-serif text-lg font-bold text-chocolate-950 dark:text-white flex items-center gap-2">
               <span>🍽️</span> Ready & Served
             </h2>
-            <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-bold text-emerald-400 border border-emerald-500/30">
-              {sortedServed.length} tickets
-            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowServed(!showServed)}
+                className={`px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all border cursor-pointer ${
+                  showServed
+                    ? "bg-emerald-500 text-white border-emerald-600"
+                    : "bg-cream-100 dark:bg-espresso-800 text-stone-500 dark:text-stone-400 border-cream-200 dark:border-espresso-700"
+                }`}
+              >
+                {showServed ? "Hide Served" : "Show Served"}
+              </button>
+              <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-bold text-emerald-500 border border-emerald-500/30">
+                {sortedServed.length}
+              </span>
+            </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
             {sortedServed.map((order) => renderOrderCard(order))}

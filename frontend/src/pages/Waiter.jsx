@@ -28,6 +28,7 @@ function WaiterBoard() {
   const [statusFilter, setStatusFilter] = useState("all"); // "all" | "waiting_for_waiter" | "waiter_reviewing" | "sent_to_kitchen" | "ready_to_serve" | "served"
   const [searchQuery, setSearchQuery] = useState("");
   const [toastMsg, setToastMsg] = useState("");
+  const [showServedHistory, setShowServedHistory] = useState(false);
 
   const showToast = (msg) => {
     setToastMsg(msg);
@@ -293,7 +294,9 @@ function WaiterBoard() {
   );
 
   const servedQueue = orders.filter(o => 
-    ["ready_to_serve", "ready", "served"].includes(o.status) && 
+    (showServedHistory || statusFilter === "served"
+      ? ["ready_to_serve", "ready", "served"].includes(o.status)
+      : ["ready_to_serve", "ready"].includes(o.status)) && 
     searchFilter(o) &&
     matchesStatusFilter(o, statusFilter)
   );
@@ -719,9 +722,21 @@ function WaiterBoard() {
                     <h3 className="font-serif text-base font-bold text-chocolate-955 dark:text-white flex items-center gap-2">
                       <span>🍽️</span> Ready & Served
                     </h3>
-                    <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-bold text-emerald-500 border border-emerald-500/30">
-                      {sortedServedQueue.length}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setShowServedHistory(!showServedHistory)}
+                        className={`px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all border cursor-pointer ${
+                          showServedHistory
+                            ? "bg-emerald-500 text-white border-emerald-600"
+                            : "bg-cream-100 dark:bg-espresso-855 text-stone-400 border-cream-200 dark:border-espresso-800"
+                        }`}
+                      >
+                        {showServedHistory ? "Hide Served" : "Show Served"}
+                      </button>
+                      <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-bold text-emerald-500 border border-emerald-500/30">
+                        {sortedServedQueue.length}
+                      </span>
+                    </div>
                   </div>
                   <div className="space-y-4">
                     <AnimatePresence>
