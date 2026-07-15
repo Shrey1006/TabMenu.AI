@@ -110,18 +110,6 @@ const galleryImages = [
 export default function Landing() {
   const { isDark, toggleTheme } = useTheme();
 
-  // Booking Form State
-  const [bookingName, setBookingName] = useState("");
-  const [bookingDate, setBookingDate] = useState("");
-  const [bookingTime, setBookingTime] = useState("");
-  const [bookingGuests, setBookingGuests] = useState("2");
-  const [bookingSubmitted, setBookingSubmitted] = useState(false);
-
-  const handleBooking = (e) => {
-    e.preventDefault();
-    if (!bookingName || !bookingDate || !bookingTime) return;
-    setBookingSubmitted(true);
-  };
 
   return (
     <div className="relative min-h-screen bg-cream-50 dark:bg-espresso-950 text-chocolate-900 dark:text-[#f7f3ec] transition-colors duration-200">
@@ -527,110 +515,28 @@ export default function Landing() {
               <div className="h-[2px] w-12 bg-gold-500 mx-auto" />
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6 border-b border-cream-200 dark:border-espresso-800 pb-6 text-center text-xs">
+            <p className="text-center text-sm text-chocolate-850 dark:text-espresso-100/80 mb-6 leading-relaxed">
+              Connect with our dining hosts directly via phone call or WhatsApp messaging to secure your premium table arrangements.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6 text-center text-xs">
               <a
                 href="tel:7738638937"
-                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-cream-100 dark:bg-espresso-800 border border-cream-200 dark:border-espresso-700 py-3 text-chocolate-850 dark:text-espresso-50 font-bold uppercase tracking-wider hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-cream-100 dark:bg-espresso-800 border border-cream-200 dark:border-espresso-750 py-4 text-chocolate-900 dark:text-espresso-50 font-bold uppercase tracking-wider hover:scale-[1.02] active:scale-95 transition-all cursor-pointer shadow-xs"
               >
-                📞 Call: 7738638937
+                📞 Call Host: 7738638937
               </a>
               <a
                 href="https://api.whatsapp.com/send/?phone=917738638937&text&type=phone_number&app_absent=0"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-green-600 hover:bg-green-700 py-3 text-white font-bold uppercase tracking-wider hover:scale-[1.02] active:scale-95 transition-all shadow-md cursor-pointer"
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-green-600 hover:bg-green-700 py-4 text-white font-bold uppercase tracking-wider hover:scale-[1.02] active:scale-95 transition-all shadow-md cursor-pointer"
               >
                 💬 WhatsApp Book
               </a>
             </div>
 
-            {bookingSubmitted ? (
-              <div className="text-center py-8 space-y-4">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100 dark:bg-green-950/40 text-green-600 text-3xl animate-bounce">
-                  ✓
-                </div>
-                <h4 className="font-serif text-xl font-semibold">Booking Request Received</h4>
-                <p className="text-sm text-[#5c443c] dark:text-[#decbba]">
-                  Thank you, <span className="font-bold text-gold-500">{bookingName}</span>. We have provisionally reserved a table for <span className="font-bold text-gold-500">{bookingGuests} guests</span> on <span className="font-bold text-gold-500">{bookingDate}</span> at <span className="font-bold text-gold-500">{bookingTime}</span>.
-                </p>
-                <p className="text-xs text-stone-400">Our host will call you shortly to confirm the reservation.</p>
-                <button
-                  onClick={() => setBookingSubmitted(false)}
-                  className="mt-4 text-xs font-semibold text-gold-500 hover:underline cursor-pointer"
-                >
-                  Book another table
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleBooking} className="space-y-4 text-sm">
-                <div>
-                  <label className="block text-xs uppercase tracking-wider text-chocolate-700 dark:text-espresso-100 mb-1.5 font-medium">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={bookingName}
-                    onChange={(e) => setBookingName(e.target.value)}
-                    className="w-full rounded-lg border border-cream-200 dark:border-espresso-750 px-4 py-3 bg-white dark:bg-espresso-950 outline-none focus:border-gold-500 dark:text-stone-100"
-                    placeholder="Enter your name"
-                  />
-                </div>
-                
-                <div className="grid gap-4 grid-cols-2">
-                  <div>
-                    <label className="block text-xs uppercase tracking-wider text-chocolate-700 dark:text-espresso-100 mb-1.5 font-medium">
-                      Date
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      value={bookingDate}
-                      onChange={(e) => setBookingDate(e.target.value)}
-                      className="w-full rounded-lg border border-cream-200 dark:border-espresso-750 px-4 py-3 bg-white dark:bg-espresso-950 outline-none focus:border-gold-500 dark:text-stone-100"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs uppercase tracking-wider text-chocolate-700 dark:text-espresso-100 mb-1.5 font-medium">
-                      Time
-                    </label>
-                    <input
-                      type="time"
-                      required
-                      value={bookingTime}
-                      onChange={(e) => setBookingTime(e.target.value)}
-                      className="w-full rounded-lg border border-cream-200 dark:border-espresso-750 px-4 py-3 bg-white dark:bg-espresso-950 outline-none focus:border-gold-500 dark:text-stone-100"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs uppercase tracking-wider text-chocolate-700 dark:text-espresso-100 mb-1.5 font-medium">
-                    Number of Guests
-                  </label>
-                  <select
-                    value={bookingGuests}
-                    onChange={(e) => setBookingGuests(e.target.value)}
-                    className="w-full rounded-lg border border-cream-200 dark:border-espresso-750 px-4 py-3 bg-white dark:bg-espresso-950 outline-none focus:border-gold-500 dark:text-stone-100"
-                  >
-                    {["1", "2", "3", "4", "5", "6", "7", "8+"].map((num) => (
-                      <option key={num} value={num}>
-                        {num} {num === "1" ? "Guest" : "Guests"}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full rounded-lg bg-gradient-to-r from-gold-500 to-gold-400 py-4 text-sm font-bold uppercase tracking-wider text-white shadow-md hover:shadow-lg transition-transform hover:-translate-y-0.5 active:translate-y-0 mt-6 cursor-pointer"
-                >
-                  Request Royal Table
-                </button>
-              </form>
-            )}
-
-            <div className="mt-6 border-t border-cream-100 dark:border-espresso-800/80 pt-6 text-center">
+            <div className="mt-8 border-t border-cream-100 dark:border-espresso-800/80 pt-6 text-center">
               <p className="text-xs text-chocolate-700 dark:text-espresso-100/70">Prefer to order to your table directly?</p>
               <Link
                 to="/customer"
