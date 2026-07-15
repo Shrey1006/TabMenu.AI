@@ -102,8 +102,8 @@ export default function Footer() {
               Reservations
             </h4>
             <p className="text-sm text-espresso-100/70 leading-relaxed">
-              Opp. Heritage Fort, Palace Road,<br />
-              Jaipur, Rajasthan - 302001
+              Krishna Radha Society, Near Bangalore Iyengar Bakery,<br />
+              Phadke Road, Dombivli East, Thane-421201, Maharashtra
             </p>
             <div className="text-sm text-espresso-100/70 space-y-1">
               <p>

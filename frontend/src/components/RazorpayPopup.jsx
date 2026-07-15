@@ -54,7 +54,7 @@ export default function RazorpayPopup({
               <div className="rounded-lg bg-stone-50 border border-stone-200/60 p-4 space-y-2 text-xs">
                 <div className="flex justify-between">
                   <span className="text-stone-500">Merchant</span>
-                  <span className="font-semibold text-stone-800">Ambika Pure Veg (Jaipur)</span>
+                  <span className="font-semibold text-stone-800">Ambika Pure Veg (Dombivli)</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-stone-500">Name</span>

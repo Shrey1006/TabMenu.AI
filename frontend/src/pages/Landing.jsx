@@ -16,7 +16,7 @@ const timelineEvents = [
   {
     year: "2015",
     title: "Heritage Recognition",
-    description: "Awarded Jaipur's 'Best Vegetarian Heritage Cuisine' title. Added our signature royal private dining room.",
+    description: "Awarded Thane's 'Best Vegetarian Heritage Cuisine' title. Added our signature royal private dining room.",
   },
   {
     year: "Today",
@@ -69,7 +69,7 @@ const strengths = [
   },
   {
     title: "Daily Sourced Produce",
-    desc: "Sourced fresh from Jaipur's local organic farmers and sustainable vegetable cooperatives every morning.",
+    desc: "Sourced fresh from Thane's local organic farmers and sustainable vegetable cooperatives every morning.",
   },
   {
     title: "Immaculate Hygiene",
@@ -81,7 +81,7 @@ const testimonials = [
   {
     name: "Aishwarya Sharma",
     role: "Local Food Critic",
-    review: "The Paneer Tikka was incredibly soft, and the heritage ambience transported me back to royal dining halls. An absolute gem in Jaipur.",
+    review: "The Paneer Tikka was incredibly soft, and the heritage ambience transported me back to royal dining halls. An absolute gem in Dombivli.",
     rating: 5,
   },
   {
@@ -167,6 +167,10 @@ export default function Landing() {
             "A sanctuary of wholesome ancestral recipes & pure-vegetarian heritage."
           </p>
 
+          <p className="mx-auto max-w-2xl text-xs sm:text-sm text-gold-400 font-semibold tracking-wider mb-6 flex items-center justify-center gap-1.5 bg-[#120b08]/50 py-2.5 px-4 rounded-xl border border-gold-500/20">
+            📍 Krishna Radha Society, Near Bangalore Iyengar Bakery, Phadke Road, Dombivli East, Thane-421201, Maharashtra
+          </p>
+
           <p className="mx-auto max-w-2xl text-sm sm:text-base leading-relaxed text-stone-300 mb-10">
             Immerse yourself in authentic Indian dining. We craft every dish with daily organic harvests, hand-milled spice grinds, and absolute culinary devotion. No artificial flavorings, just traditional purity.
           </p>
@@ -209,10 +213,10 @@ export default function Landing() {
             </div>
             
             <p className="text-base sm:text-lg leading-relaxed text-chocolate-850 dark:text-espresso-100">
-              Founded in the heritage heartland of Rajasthan in 1995, Ambika Pure Veg was born from a singular vision: to serve traditional, wholesome Indian cuisine that honors the body and respects the soul.
+              Founded in Maharashtra in 1995, Ambika Pure Veg was born from a singular vision: to serve traditional, wholesome Indian cuisine that honors the body and respects the soul.
             </p>
             <p className="text-sm leading-relaxed text-chocolate-800 dark:text-espresso-100/80">
-              We reject modern shortcuts. Our kitchen does not utilize processed ingredients, artificial preservatives, or chemical coloring. Spices are hand-ground in mortar pestles every morning, wheat is stone-milled to preserve its nutrients, and fresh produce is sourced before sunrise from Jaipur's local farmers.
+              We reject modern shortcuts. Our kitchen does not utilize processed ingredients, artificial preservatives, or chemical coloring. Spices are hand-ground in mortar pestles every morning, wheat is stone-milled to preserve its nutrients, and fresh produce is sourced before sunrise from local farmers.
             </p>
 
             <div className="grid gap-6 sm:grid-cols-3 pt-6">

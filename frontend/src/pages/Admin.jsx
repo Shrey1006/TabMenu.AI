@@ -243,7 +243,7 @@ function AdminBoard() {
         {/* Banner Title */}
         <div className="text-center space-y-2 py-4">
           <p className="font-serif text-xs font-semibold uppercase tracking-[0.35em] text-gold-500">
-            Ambika Pure Veg Jaipur
+            Ambika Pure Veg Dombivli
           </p>
           <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-wide text-chocolate-950 dark:text-white">
             The Royal Custodian Console
