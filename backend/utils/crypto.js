@@ -14,7 +14,11 @@ export const generateTableToken = (tableNumber) => {
 
 export const verifyTableToken = (token) => {
   try {
-    const decoded = Buffer.from(token, 'base64url').toString('utf8');
+    if (!token) return null;
+    // Strip trailing slashes, spaces, query parameters, or hashes
+    const cleanToken = String(token).split('?')[0].split('#')[0].replace(/\/+$/, "").trim();
+
+    const decoded = Buffer.from(cleanToken, 'base64url').toString('utf8');
     const [payload, signature] = decoded.split('|');
     if (!payload || !signature) return null;
 

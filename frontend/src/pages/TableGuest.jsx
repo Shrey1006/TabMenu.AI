@@ -583,12 +583,13 @@ export default function TableGuest() {
   const connectTable = async () => {
     setLoading(true);
     try {
+      const cleanParam = String(tableParam).split('?')[0].split('#')[0].replace(/\/+$/, "").trim();
       let responseData;
-      if (/^\d+$/.test(tableParam)) {
-        const { data } = await api.get(`/tables/connect/${tableParam}`);
+      if (/^\d+$/.test(cleanParam)) {
+        const { data } = await api.get(`/tables/connect/${cleanParam}`);
         responseData = data;
       } else {
-        const { data } = await api.get(`/tables/verify/${tableParam}`);
+        const { data } = await api.get(`/tables/verify/${cleanParam}`);
         responseData = data;
       }
       setTableNumber(String(responseData.tableNumber));

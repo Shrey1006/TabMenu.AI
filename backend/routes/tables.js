@@ -30,10 +30,13 @@ router.get("/connect/:tableNumber", async (req, res) => {
 });
 
 router.get("/verify/:token", async (req, res) => {
+  console.log("[DEBUG] Verifying token:", req.params.token);
   const result = verifyTableToken(req.params.token);
+  console.log("[DEBUG] Verification result:", result);
   if (!result) return res.status(400).json({ message: "Invalid QR token" });
 
   const table = await Table.findOne({ tableNumber: result.tableNumber });
+  console.log("[DEBUG] Found table:", table);
   if (!table) return res.status(404).json({ message: "Table not found" });
 
   res.json({
