@@ -179,11 +179,7 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center gap-2 text-stone-400">
-          <span className="text-[10px] uppercase tracking-widest text-gold-400">Scroll to explore</span>
-          <div className="h-8 w-[1px] bg-gradient-to-b from-gold-400 to-transparent animate-pulse" />
-        </div>
+
       </section>
 
       {/* ==================== ABOUT US SECTION ==================== */}
