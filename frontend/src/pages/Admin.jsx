@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { QRCodeCanvas } from "qrcode.react";
+import { motion, AnimatePresence } from "framer-motion";
 import api from "../lib/api.js";
 import { useAuth } from "../context/AuthContext";
 import { SocketProvider, useSocket } from "../context/SocketContext";
@@ -181,7 +182,10 @@ function AdminBoard() {
   if (!data)
     return (
       <div className="flex min-h-screen items-center justify-center bg-cream-50 dark:bg-espresso-950 text-chocolate-900 dark:text-espresso-50 font-serif font-bold text-lg">
-        Loading admin center...
+        <div className="text-center space-y-4">
+          <div className="h-10 w-10 border-4 border-gold-500 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="tracking-wide">Summoning admin console...</p>
+        </div>
       </div>
     );
 
@@ -189,20 +193,23 @@ function AdminBoard() {
     <div className="min-h-screen bg-cream-50 dark:bg-espresso-950 text-chocolate-900 dark:text-[#f7f3ec] transition-colors duration-150">
       
       {/* Header */}
-      <header className="border-b border-cream-200 dark:border-espresso-800 bg-white dark:bg-espresso-900/90 px-6 py-4 backdrop-blur-md sticky top-0 z-35">
-        <div className="flex items-center justify-between">
+      <header className="border-b border-cream-200 dark:border-espresso-850 bg-white dark:bg-espresso-900/90 px-6 py-4 backdrop-blur-md sticky top-0 z-35">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
             <img
               src="/logo.png"
               alt="Logo"
-              className="h-10 w-10 rounded-full object-cover ring-2 ring-gold-500/40 bg-white"
+              className="h-12 w-12 rounded-full object-cover ring-2 ring-gold-500/60 bg-white shadow-md"
             />
             <div>
-              <h1 className="font-serif text-lg font-bold text-chocolate-900 dark:text-white tracking-wide">
-                Admin Management Center
-              </h1>
-              <p className="text-xs uppercase tracking-wider text-gold-500 font-medium">
-                Tables Management · Menu Customization
+              <div className="flex items-center gap-1.5">
+                <span className="text-[#b69234] text-xs">👑</span>
+                <h1 className="font-serif text-lg font-bold text-chocolate-900 dark:text-white tracking-wide">
+                  Ambika Admin Center
+                </h1>
+              </div>
+              <p className="text-[10px] uppercase tracking-wider text-gold-500 font-semibold">
+                Heritage Table Medallions & Menu Customs
               </p>
             </div>
           </div>
@@ -215,7 +222,7 @@ function AdminBoard() {
             </button>
             <button
               onClick={logout}
-              className="rounded-lg bg-red-500/10 hover:bg-red-500/25 px-4 py-2 text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400 transition-all cursor-pointer"
+              className="rounded-lg bg-red-500/10 hover:bg-red-500/25 px-4 py-2 text-xs font-bold uppercase tracking-wider text-red-650 dark:text-red-400 transition-all cursor-pointer"
             >
               Logout
             </button>
@@ -226,93 +233,147 @@ function AdminBoard() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-7xl p-6 space-y-8">
-        
+      {/* Main Admin Wrapper */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="mx-auto max-w-7xl p-6 space-y-8"
+      >
+        {/* Banner Title */}
+        <div className="text-center space-y-2 py-4">
+          <p className="font-serif text-xs font-semibold uppercase tracking-[0.35em] text-gold-500">
+            Ambika Pure Veg Jaipur
+          </p>
+          <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-wide text-chocolate-950 dark:text-white">
+            The Royal Custodian Console
+          </h2>
+          <div className="h-[2px] w-24 bg-gradient-to-r from-transparent via-gold-500 to-transparent mx-auto mt-2" />
+        </div>
+
         {/* Feedback / Alert notifications */}
-        {adminMessage && (
-          <div className="rounded-xl border border-gold-500/35 bg-gold-500/10 p-4 text-xs font-semibold uppercase tracking-wider text-[#b69234]">
-            🔔 {adminMessage}
-          </div>
-        )}
+        <AnimatePresence>
+          {adminMessage && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              className="rounded-xl border border-gold-500/35 bg-gold-500/10 p-4 text-xs font-semibold uppercase tracking-wider text-[#b69234] text-center"
+            >
+              ✦ {adminMessage} ✦
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Dynamic Alert Banner */}
         {alerts.length > 0 && (
-          <div className="rounded-xl border border-red-200 dark:border-red-950 bg-red-50 dark:bg-red-950/20 p-4 space-y-2">
-            <h3 className="font-bold text-red-800 dark:text-red-400 text-sm">⚠️ Live Waiter & Guest Service Alerts</h3>
-            {alerts.map((a, i) => (
-              <p key={i} className="text-xs text-red-700 dark:text-red-400">
-                {a.message}
-              </p>
-            ))}
+          <div className="rounded-xl border border-red-200 dark:border-red-950/60 bg-red-50/50 dark:bg-red-950/10 p-4 space-y-2 shadow-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-red-650">🛎️</span>
+              <h3 className="font-bold text-red-800 dark:text-red-400 text-xs uppercase tracking-wider">
+                Live Dining Room Service Calls
+              </h3>
+            </div>
+            <div className="space-y-1.5">
+              {alerts.map((a, i) => (
+                <p key={i} className="text-xs text-red-700 dark:text-red-400/80 pl-4 border-l border-red-550">
+                  {a.message}
+                </p>
+              ))}
+            </div>
           </div>
         )}
 
-        {/* Clean Dashboard Stats Row (No software analytics) */}
+        {/* Royal Dashboard Stats Row */}
         <div className="grid gap-6 sm:grid-cols-3">
-          <div className="rounded-2xl bg-white dark:bg-espresso-900 p-6 border border-cream-200 dark:border-espresso-750 shadow-xs">
-            <p className="text-xs text-stone-400 uppercase tracking-widest font-semibold">Gross Dine-In Revenue</p>
+          <div className="rounded-2xl bg-white dark:bg-espresso-900 p-6 border border-cream-200 dark:border-espresso-750 shadow-sm relative overflow-hidden group hover:border-gold-500/40 transition-colors">
+            <div className="absolute right-4 top-4 text-3xl opacity-20">🪙</div>
+            <p className="text-xs text-stone-400 uppercase tracking-widest font-semibold">Gross Dine-In Billings</p>
             <p className="text-3xl font-serif font-bold text-gold-500 mt-2">
               ₹{data.revenue?.toLocaleString("en-IN") || 0}
             </p>
+            <div className="h-1 w-full bg-gold-500 absolute bottom-0 left-0" />
           </div>
-          <div className="rounded-2xl bg-white dark:bg-espresso-900 p-6 border border-cream-200 dark:border-espresso-750 shadow-xs">
+          
+          <div className="rounded-2xl bg-white dark:bg-espresso-900 p-6 border border-cream-200 dark:border-espresso-750 shadow-sm relative overflow-hidden group hover:border-gold-500/40 transition-colors">
+            <div className="absolute right-4 top-4 text-3xl opacity-20">🔥</div>
             <p className="text-xs text-stone-400 uppercase tracking-widest font-semibold">Active Kitchen Orders</p>
             <p className="text-3xl font-serif font-bold text-chocolate-900 dark:text-white mt-2">
               {data.activeOrders}
             </p>
+            <div className="h-1 w-full bg-gold-500 absolute bottom-0 left-0" />
           </div>
-          <div className="rounded-2xl bg-white dark:bg-espresso-900 p-6 border border-cream-200 dark:border-espresso-750 shadow-xs">
-            <p className="text-xs text-stone-400 uppercase tracking-widest font-semibold">Seeded Tables Count</p>
+
+          <div className="rounded-2xl bg-white dark:bg-espresso-900 p-6 border border-cream-200 dark:border-espresso-750 shadow-sm relative overflow-hidden group hover:border-gold-500/40 transition-colors">
+            <div className="absolute right-4 top-4 text-3xl opacity-20">🍽️</div>
+            <p className="text-xs text-stone-400 uppercase tracking-widest font-semibold">Dining Floor Tables</p>
             <p className="text-3xl font-serif font-bold text-chocolate-900 dark:text-white mt-2">
               {data.tableCount}
             </p>
+            <div className="h-1 w-full bg-gold-500 absolute bottom-0 left-0" />
           </div>
         </div>
 
-        {/* Tables & QR Code Generator side-by-side */}
+        {/* Tables & QR Code Generator */}
         <div className="grid gap-8 lg:grid-cols-2">
           
           {/* Tables Management */}
-          <div className="rounded-3xl bg-white dark:bg-espresso-900 p-6 border border-cream-200 dark:border-espresso-750 shadow-xs space-y-6">
-            <div className="flex items-center justify-between border-b border-cream-100 dark:border-espresso-800 pb-3">
-              <h2 className="font-serif text-xl font-bold">Dining Room Floor</h2>
-              <span className="text-xs font-semibold text-stone-400 uppercase tracking-wider">
-                Total {data.tables?.length} tables
-              </span>
-            </div>
-            
-            {/* Grid of tables */}
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-              {data.tables?.map((t) => (
-                <div
-                  key={t._id}
-                  className="relative rounded-xl border border-cream-200 dark:border-espresso-800 p-4 text-center bg-cream-50/50 dark:bg-espresso-950/40 text-chocolate-900 dark:text-espresso-100 group transition-all"
-                >
-                  <button
-                    onClick={() => deleteTable(t._id)}
-                    className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-500 transition-opacity p-1 cursor-pointer"
-                    title="Delete Table"
-                  >
-                    ✕
-                  </button>
-                  <p className="font-serif text-sm font-bold">Table {t.tableNumber}</p>
-                  <p className="text-[10px] text-stone-400 mt-1 uppercase tracking-wider">
-                    Cap: {t.capacity}
-                  </p>
-                  <span className={`inline-block mt-2 rounded-full h-2 w-2 ${
-                    t.status === "available" ? "bg-green-500" : "bg-gold-500"
-                  }`} />
+          <div className="rounded-3xl bg-white dark:bg-espresso-900 p-6 border border-cream-200 dark:border-espresso-750 shadow-sm space-y-6 flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-cream-100 dark:border-espresso-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-gold-500">✦</span>
+                  <h2 className="font-serif text-xl font-bold">Dining Medallions</h2>
                 </div>
-              ))}
+                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider bg-cream-100 dark:bg-espresso-800 px-2 py-0.5 rounded-md">
+                  Floor Occupancy
+                </span>
+              </div>
+              
+              {/* Grid of tables - Medallion Style */}
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
+                {data.tables?.map((t) => (
+                  <div
+                    key={t._id}
+                    className="relative rounded-2xl border border-cream-200 dark:border-espresso-850 p-4 text-center bg-cream-50/30 dark:bg-espresso-950/20 text-chocolate-900 dark:text-espresso-100 hover:border-gold-500/60 hover:shadow-md transition-all duration-300 group flex flex-col items-center justify-center min-h-[100px]"
+                  >
+                    <button
+                      onClick={() => deleteTable(t._id)}
+                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-500 transition-opacity p-1 cursor-pointer"
+                      title="Remove Table"
+                    >
+                      ✕
+                    </button>
+                    {/* Ring Medallion Details */}
+                    <div className="h-10 w-10 rounded-full border-2 border-dashed border-gold-500/40 flex items-center justify-center font-serif text-sm font-bold text-[#b69234]">
+                      {t.tableNumber}
+                    </div>
+                    <p className="text-[9px] uppercase tracking-wider text-stone-400 mt-2 font-semibold">
+                      Seats: {t.capacity}
+                    </p>
+                    <div className="mt-2 flex items-center gap-1">
+                      <span className={`h-1.5 w-1.5 rounded-full ${
+                        t.status === "available" ? "bg-green-500 animate-pulse" : "bg-gold-500"
+                      }`} />
+                      <span className="text-[8px] uppercase tracking-widest text-stone-405">
+                        {t.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Create New Table Form */}
-            <div className="bg-cream-50/30 dark:bg-espresso-950/40 p-4 rounded-xl border border-cream-200 dark:border-espresso-800 space-y-4">
-              <h3 className="font-serif text-sm font-bold tracking-wide">Register New Dining Table</h3>
+            <div className="bg-cream-50/20 dark:bg-espresso-950/20 p-4 rounded-2xl border border-cream-200 dark:border-espresso-850 space-y-4 mt-4">
+              <div className="flex items-center gap-2">
+                <span className="text-gold-500 text-xs">⚜</span>
+                <h3 className="font-serif text-sm font-bold tracking-wide">Register Medallion Table</h3>
+              </div>
               <div className="grid gap-3 grid-cols-2">
                 <div>
-                  <label className="block text-[10px] uppercase text-stone-400 font-semibold mb-1">
-                    Table Number
+                  <label className="block text-[9px] uppercase text-stone-400 font-bold mb-1 tracking-wider">
+                    Table ID
                   </label>
                   <input
                     type="number"
@@ -324,7 +385,7 @@ function AdminBoard() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase text-stone-400 font-semibold mb-1">
+                  <label className="block text-[9px] uppercase text-stone-400 font-bold mb-1 tracking-wider">
                     Capacity (Seats)
                   </label>
                   <input
@@ -339,37 +400,38 @@ function AdminBoard() {
               <button
                 onClick={createTable}
                 disabled={createLoading || !newTableNumber}
-                className="w-full rounded-lg bg-gradient-to-r from-gold-500 to-gold-400 hover:from-gold-600 hover:to-gold-500 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-sm disabled:opacity-50 cursor-pointer"
+                className="w-full rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 hover:from-gold-600 hover:to-gold-500 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-sm disabled:opacity-50 cursor-pointer"
               >
-                {createLoading ? "Creating..." : "Create Table"}
+                {createLoading ? "Forging Medallion..." : "Add Medallion Table"}
               </button>
             </div>
           </div>
 
           {/* QR Generator */}
-          <div className="rounded-3xl bg-white dark:bg-espresso-900 p-6 border border-cream-200 dark:border-espresso-750 shadow-xs space-y-6 flex flex-col justify-between">
+          <div className="rounded-3xl bg-white dark:bg-espresso-900 p-6 border border-cream-200 dark:border-espresso-750 shadow-sm space-y-6 flex flex-col justify-between">
             <div>
-              <h2 className="font-serif text-xl font-bold border-b border-cream-100 dark:border-espresso-800 pb-3">
-                Table Medallion QR Generator
-              </h2>
+              <div className="flex items-center gap-2 border-b border-cream-100 dark:border-espresso-800 pb-3">
+                <span className="text-gold-500">✦</span>
+                <h2 className="font-serif text-xl font-bold">Medallion QR Cryptograph</h2>
+              </div>
               <p className="mt-2 text-xs text-stone-400 leading-relaxed">
-                Generate high-quality cryptographic QR codes linking physical table medallions directly to our digital check-in interface.
+                Generate high-security cryptographic table links to display inside the physical brass dining table medallions for direct check-in.
               </p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="mb-1.5 block text-xs uppercase tracking-wider text-stone-500 dark:text-espresso-100 font-medium">
+                <label className="mb-1.5 block text-xs uppercase tracking-wider text-stone-400 font-bold">
                   Select Dining Table
                 </label>
                 <select
                   value={selectedTable}
                   onChange={(e) => setSelectedTable(e.target.value)}
-                  className="w-full rounded-xl border border-cream-200 dark:border-espresso-800 bg-cream-50/50 dark:bg-espresso-950/40 px-4 py-3 outline-none focus:border-gold-500 text-xs font-semibold"
+                  className="w-full rounded-xl border border-cream-200 dark:border-espresso-800 bg-cream-50/50 dark:bg-espresso-950/40 px-4 py-3 outline-none focus:border-gold-500 text-xs font-semibold text-chocolate-850 dark:text-espresso-50"
                 >
                   {data.tables?.map((t) => (
                     <option key={t._id} value={t.tableNumber}>
-                      Table {t.tableNumber} (Token: {t.qrToken?.substring(0, 10)}...)
+                      Table {t.tableNumber} (Token: {t.qrToken?.substring(0, 12)}...)
                     </option>
                   ))}
                 </select>
@@ -377,7 +439,7 @@ function AdminBoard() {
 
               {selectedTableObj && (
                 <div className="flex flex-col sm:flex-row items-center gap-6 pt-2 bg-cream-50/20 dark:bg-espresso-950/10 p-4 rounded-2xl border border-cream-100 dark:border-espresso-850">
-                  <div className="flex h-36 w-36 items-center justify-center rounded-xl border border-dashed border-cream-250 dark:border-espresso-800 bg-white p-2 shrink-0">
+                  <div className="flex h-36 w-36 items-center justify-center rounded-xl border border-dashed border-cream-250 dark:border-espresso-800 bg-white p-2 shrink-0 shadow-inner">
                     <QRCodeCanvas
                       ref={qrCanvasRef}
                       value={shareUrl}
@@ -387,21 +449,23 @@ function AdminBoard() {
                     />
                   </div>
                   <div className="space-y-3 flex-1">
-                    <p className="text-xs uppercase tracking-widest font-semibold text-gold-500">QR Landing Link</p>
-                    <p className="text-[10px] break-all text-stone-400 max-w-[250px]">{shareUrl}</p>
+                    <p className="text-[10px] uppercase tracking-widest font-bold text-gold-500">Secure Cryptographic URL</p>
+                    <p className="text-[9px] break-all text-stone-400 font-mono select-all bg-cream-50/40 dark:bg-espresso-950 p-2 rounded-lg border border-cream-200 dark:border-espresso-800">
+                      {shareUrl}
+                    </p>
                     <div className="flex gap-2">
                       <button
                         onClick={createQr}
                         disabled={qrLoading}
-                        className="rounded-lg bg-gold-500 hover:bg-gold-600 text-white font-bold px-3 py-2 text-[10px] uppercase tracking-wider transition-colors cursor-pointer"
+                        className="rounded-lg bg-gold-500 hover:bg-gold-600 text-white font-bold px-3.5 py-2 text-[10px] uppercase tracking-wider transition-colors cursor-pointer"
                       >
-                        {qrLoading ? "Regenerating..." : "Create Link"}
+                        {qrLoading ? "Generating..." : "Get Link"}
                       </button>
                       <button
                         onClick={exportQr}
-                        className="rounded-lg border border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-white font-bold px-3 py-2 text-[10px] uppercase tracking-wider transition-colors cursor-pointer"
+                        className="rounded-lg border border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-white font-bold px-3.5 py-2 text-[10px] uppercase tracking-wider transition-colors cursor-pointer"
                       >
-                        Download PNG
+                        Export PNG
                       </button>
                     </div>
                   </div>
@@ -420,7 +484,7 @@ function AdminBoard() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 0.5 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/60 backdrop-blur-xs"
+                className="absolute inset-0 bg-black/60 backdrop-blur-xs animate-fade-in"
                 onClick={() => {
                   setIsFormOpen(false);
                   setEditingItem(null);
@@ -446,15 +510,18 @@ function AdminBoard() {
         </AnimatePresence>
 
         {/* Menu Management Section */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-serif text-2xl font-bold">Heritage Menu Customs</h2>
+        <div className="space-y-6 pt-4">
+          <div className="flex items-center justify-between border-b border-cream-200 dark:border-espresso-800 pb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-gold-500 text-lg">✦</span>
+              <h2 className="font-serif text-2xl font-bold">Heritage Culinary Specialties</h2>
+            </div>
             <button
               onClick={() => {
                 setEditingItem(null);
                 setIsFormOpen(true);
               }}
-              className="rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 hover:from-gold-600 hover:to-gold-500 py-3 px-5 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:shadow-lg transition-transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+              className="rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 hover:from-gold-600 hover:to-gold-500 py-3 px-6 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:shadow-lg transition-transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
             >
               + Add Specialty Dish
             </button>
@@ -468,7 +535,7 @@ function AdminBoard() {
           />
         </div>
 
-      </div>
+      </motion.div>
     </div>
   );
 }
