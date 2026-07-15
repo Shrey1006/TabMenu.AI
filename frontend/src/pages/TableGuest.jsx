@@ -69,15 +69,15 @@ function TableGuestApp({ qrToken, tableNumber }) {
 
   // Fetch active order for this table on load
   useEffect(() => {
-    if (tableNumber) {
-      api.get("/orders/active")
+    if (tableNumber && qrToken) {
+      api.get(`/orders/active/table/${tableNumber}?token=${qrToken}`)
         .then((res) => {
           const tableOrder = res.data.find((o) => String(o.tableNumber) === String(tableNumber));
           if (tableOrder) setOrder(tableOrder);
         })
         .catch(() => {});
     }
-  }, [tableNumber]);
+  }, [tableNumber, qrToken]);
 
   useEffect(() => {
     if (!socket || !tableNumber) return;

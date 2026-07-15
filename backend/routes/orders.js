@@ -36,6 +36,26 @@ router.get(
   },
 );
 
+router.get(
+  "/active/table/:tableNumber",
+  async (req, res) => {
+    const { tableNumber } = req.params;
+    const { token } = req.query;
+
+    const verified = verifyTableToken(token);
+    if (!verified || String(verified.tableNumber) !== String(tableNumber)) {
+      return res.status(400).json({ message: "Invalid or missing QR token" });
+    }
+
+    const order = await Order.findOne({
+      tableNumber: Number(tableNumber),
+      status: { $in: ["pending", "in_progress", "ready"] },
+    }).populate("items.menuItem");
+
+    res.json(order ? [order] : []);
+  },
+);
+
 router.post("/", async (req, res) => {
   const { qrToken, items, customerName, customerPhone, customerNotes } =
     req.body;
