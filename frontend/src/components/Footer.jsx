@@ -107,7 +107,7 @@ export default function Footer() {
             </p>
             <div className="text-sm text-espresso-100/70 space-y-1">
               <p>
-                Phone: <a href="tel:+911412345678" className="text-white hover:text-gold-400 transition-colors">+91 141 234 5678</a>
+                Phone: <a href="tel:7738638937" className="text-white hover:text-gold-400 transition-colors">+91 77386 38937</a>
               </p>
               <p>
                 Email: <a href="mailto:reservations@ambikapureveg.com" className="text-white hover:text-gold-400 transition-colors">reservations@ambikapureveg.com</a>

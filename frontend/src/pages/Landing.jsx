@@ -527,6 +527,23 @@ export default function Landing() {
               <div className="h-[2px] w-12 bg-gold-500 mx-auto" />
             </div>
 
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6 border-b border-cream-200 dark:border-espresso-800 pb-6 text-center text-xs">
+              <a
+                href="tel:7738638937"
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-cream-100 dark:bg-espresso-800 border border-cream-200 dark:border-espresso-700 py-3 text-chocolate-850 dark:text-espresso-50 font-bold uppercase tracking-wider hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+              >
+                📞 Call: 7738638937
+              </a>
+              <a
+                href="https://api.whatsapp.com/send/?phone=917738638937&text&type=phone_number&app_absent=0"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-green-600 hover:bg-green-700 py-3 text-white font-bold uppercase tracking-wider hover:scale-[1.02] active:scale-95 transition-all shadow-md cursor-pointer"
+              >
+                💬 WhatsApp Book
+              </a>
+            </div>
+
             {bookingSubmitted ? (
               <div className="text-center py-8 space-y-4">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100 dark:bg-green-950/40 text-green-600 text-3xl animate-bounce">
