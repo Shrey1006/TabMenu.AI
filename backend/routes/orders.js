@@ -37,9 +37,13 @@ router.get(
     try {
       let query = {};
       if (req.user.role === "kitchen") {
-        // Kitchen only sees confirmed orders that are not yet served
+        // Kitchen sees confirmed orders that are not yet served, and recently served orders (last 12 hours)
+        const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
         query = {
-          status: { $in: ["sent_to_kitchen", "preparing", "ready_to_serve", "pending", "in_progress", "ready"] },
+          $or: [
+            { status: { $in: ["sent_to_kitchen", "preparing", "ready_to_serve", "pending", "in_progress", "ready"] } },
+            { status: "served", updatedAt: { $gte: twelveHoursAgo } }
+          ]
         };
       } else {
         query = {

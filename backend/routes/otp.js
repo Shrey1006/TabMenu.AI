@@ -26,19 +26,16 @@ router.post("/send", async (req, res) => {
         });
       }
       // Increment resend attempts and update OTP
-      const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      const newOtp = "not human";
       otpRecord.otp = newOtp;
       otpRecord.expiresAt = new Date(Date.now() + OTP_EXPIRY_MS);
       otpRecord.resendAttempts += 1;
       otpRecord.verificationAttempts = 0; // Reset verification attempts for the new code
       await otpRecord.save();
 
-      console.log(`[OTP] Generated new OTP for ${phone}: ${newOtp}`);
+      console.log(`[OTP] Generated new confirmation text for ${phone}: ${newOtp}`);
 
-      const response = { message: "Verification code sent successfully" };
-      if (process.env.NODE_ENV !== "production") {
-        response.mockOtp = newOtp;
-      }
+      const response = { message: "Verification initialized", mockOtp: newOtp };
       return res.json(response);
     }
 
@@ -48,7 +45,7 @@ router.post("/send", async (req, res) => {
     }
 
     // Create a new OTP record
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = "not human";
     const expiresAt = new Date(Date.now() + OTP_EXPIRY_MS);
 
     await OTP.create({
@@ -60,17 +57,14 @@ router.post("/send", async (req, res) => {
       verified: false
     });
 
-    console.log(`[OTP] Generated OTP for ${phone}: ${otp}`);
+    console.log(`[OTP] Generated confirmation text for ${phone}: ${otp}`);
 
-    const response = { message: "Verification code sent successfully" };
-    if (process.env.NODE_ENV !== "production") {
-      response.mockOtp = otp;
-    }
+    const response = { message: "Verification initialized", mockOtp: otp };
     return res.json(response);
 
   } catch (error) {
-    console.error("Error in sending OTP:", error);
-    return res.status(500).json({ message: "Server error sending verification code" });
+    console.error("Error in sending verification code:", error);
+    return res.status(500).json({ message: "Server error setting up verification" });
   }
 });
 
@@ -78,27 +72,29 @@ router.post("/send", async (req, res) => {
 router.post("/verify", async (req, res) => {
   const { phone, otp } = req.body;
   if (!phone || !otp) {
-    return res.status(400).json({ message: "Phone number and OTP code are required" });
+    return res.status(400).json({ message: "Phone number and verification text are required" });
   }
 
   try {
     const otpRecord = await OTP.findOne({ phone });
 
     if (!otpRecord || otpRecord.expiresAt < new Date()) {
-      return res.status(400).json({ message: "Verification code has expired. Please request a new one." });
+      return res.status(400).json({ message: "Verification session has expired. Please try again." });
     }
 
     if (otpRecord.verificationAttempts >= MAX_VERIFY_ATTEMPTS) {
       await OTP.deleteOne({ phone });
-      return res.status(400).json({ message: "Too many failed verification attempts. Please request a new OTP." });
+      return res.status(400).json({ message: "Too many failed verification attempts. Please try again." });
     }
 
     otpRecord.verificationAttempts += 1;
     await otpRecord.save();
 
-    if (otpRecord.otp !== otp) {
+    const isValidOtp = otpRecord.otp.toLowerCase() === otp.trim().toLowerCase();
+
+    if (!isValidOtp) {
       return res.status(400).json({
-        message: `Invalid verification code. Attempts remaining: ${MAX_VERIFY_ATTEMPTS - otpRecord.verificationAttempts}`
+        message: `Invalid verification text. Please type "not human" exactly. Attempts remaining: ${MAX_VERIFY_ATTEMPTS - otpRecord.verificationAttempts}`
       });
     }
 

@@ -42,17 +42,105 @@ function KitchenBoard() {
     return STATUS_FLOW[idx + 1] || null;
   };
 
-  const sorted = [...orders].sort((a, b) => {
+  const orderedOrders = orders.filter(o => 
+    ["sent_to_kitchen", "pending", "preparing", "in_progress"].includes(o.status)
+  );
+  
+  const servedOrders = orders.filter(o => 
+    ["ready_to_serve", "ready", "served"].includes(o.status)
+  );
+
+  const sortedOrdered = [...orderedOrders].sort((a, b) => {
     const priority = { 
       sent_to_kitchen: 0, 
       pending: 0,
       preparing: 1, 
-      in_progress: 1,
-      ready_to_serve: 2,
-      ready: 2 
+      in_progress: 1 
     };
-    return (priority[a.status] ?? 3) - (priority[b.status] ?? 3);
+    return (priority[a.status] ?? 2) - (priority[b.status] ?? 2);
   });
+
+  const sortedServed = [...servedOrders].sort((a, b) => {
+    const isReadyA = ["ready_to_serve", "ready"].includes(a.status);
+    const isReadyB = ["ready_to_serve", "ready"].includes(b.status);
+    if (isReadyA && !isReadyB) return -1;
+    if (!isReadyA && isReadyB) return 1;
+    return new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt);
+  });
+
+  const renderOrderCard = (order) => {
+    const next = nextStatus(order.status);
+    const statusColors = {
+      sent_to_kitchen: "border-yellow-500",
+      pending: "border-yellow-500",
+      preparing: "border-orange-500",
+      in_progress: "border-orange-500",
+      ready_to_serve: "border-green-500",
+      ready: "border-green-500",
+      served: "border-stone-500",
+    };
+    const statusLabels = {
+      sent_to_kitchen: "Accepted",
+      pending: "Accepted",
+      preparing: "Cooking",
+      in_progress: "Cooking",
+      ready_to_serve: "Ready",
+      ready: "Ready",
+      served: "Served",
+    };
+    const buttonLabels = {
+      preparing: "Start Cooking",
+      ready_to_serve: "Mark Ready",
+      served: "Mark Served"
+    };
+    
+    return (
+      <div
+        key={order._id}
+        className={`rounded-2xl border-l-4 p-5 bg-white dark:bg-espresso-900 text-chocolate-900 dark:text-espresso-50 border-y border-r border-cream-200 dark:border-espresso-750 shadow-sm ${statusColors[order.status] || "border-stone-600"}`}
+      >
+        <div className="flex justify-between items-center border-b border-cream-100 dark:border-espresso-800 pb-2">
+          <h2 className="font-serif text-base font-bold">Table {order.tableNumber}</h2>
+          <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
+            ["sent_to_kitchen", "pending"].includes(order.status) ? "bg-yellow-500/10 text-yellow-600" :
+            ["preparing", "in_progress"].includes(order.status) ? "bg-orange-500/10 text-orange-600" :
+            ["ready_to_serve", "ready"].includes(order.status) ? "bg-green-500/10 text-green-600" :
+            "bg-stone-500/10 text-stone-650"
+          }`}>
+            {statusLabels[order.status] || order.status?.replace("_", " ")}
+          </span>
+        </div>
+        <ul className="mt-3 space-y-2 text-xs">
+          {order.items?.map((i, idx) => (
+            <li key={idx} className="flex justify-between">
+              <span className="font-semibold text-chocolate-850 dark:text-espresso-100">
+                {i.quantity}x {i.name}
+              </span>
+              <span className="text-gold-600 italic font-medium">{i.notes || ""}</span>
+            </li>
+          ))}
+        </ul>
+        {order.customerNotes && (
+          <p className="mt-3 text-[11px] text-gold-600 bg-gold-500/5 p-2 rounded-lg border border-gold-500/10">
+            Note: {order.customerNotes}
+          </p>
+        )}
+        {order.waiterNotes && (
+          <p className="mt-2 text-[11px] text-blue-600 bg-blue-550/5 p-2 rounded-lg border border-blue-500/10">
+            Waiter Notes: {order.waiterNotes}
+          </p>
+        )}
+        {next && (
+          <button
+            onClick={() => updateStatus(order._id, next)}
+            className="mt-5 w-full rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 hover:from-gold-600 hover:to-gold-500 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-xs cursor-pointer"
+          >
+            {buttonLabels[next] || `Mark ${next.replace("_", " ")}`}
+          </button>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-espresso-950 text-espresso-50 transition-colors duration-150">
@@ -88,82 +176,46 @@ function KitchenBoard() {
         </div>
       </header>
 
-      <div className="grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-3">
-        {sorted.map((order) => {
-          const next = nextStatus(order.status);
-          const statusColors = {
-            sent_to_kitchen: "border-yellow-500",
-            pending: "border-yellow-500",
-            preparing: "border-orange-500",
-            in_progress: "border-orange-500",
-            ready_to_serve: "border-green-500",
-            ready: "border-green-500",
-          };
-          const statusLabels = {
-            sent_to_kitchen: "Accepted",
-            pending: "Accepted",
-            preparing: "Cooking",
-            in_progress: "Cooking",
-            ready_to_serve: "Ready",
-            ready: "Ready",
-          };
-          const buttonLabels = {
-            preparing: "Start Cooking",
-            ready_to_serve: "Mark Ready",
-            served: "Mark Served"
-          };
-          
-          return (
-            <div
-              key={order._id}
-              className={`rounded-2xl border-l-4 p-5 bg-white dark:bg-espresso-900 text-chocolate-900 dark:text-espresso-50 border-y border-r border-cream-200 dark:border-espresso-750 shadow-sm ${statusColors[order.status] || "border-stone-600"}`}
-            >
-              <div className="flex justify-between items-center border-b border-cream-100 dark:border-espresso-800 pb-2">
-                <h2 className="font-serif text-lg font-bold">Table {order.tableNumber}</h2>
-                <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
-                  ["sent_to_kitchen", "pending"].includes(order.status) ? "bg-yellow-500/10 text-yellow-600" :
-                  ["preparing", "in_progress"].includes(order.status) ? "bg-orange-500/10 text-orange-600" :
-                  "bg-green-500/10 text-green-600"
-                }`}>
-                  {statusLabels[order.status] || order.status?.replace("_", " ")}
-                </span>
-              </div>
-              <ul className="mt-3 space-y-2 text-xs">
-                {order.items?.map((i, idx) => (
-                  <li key={idx} className="flex justify-between">
-                    <span className="font-semibold text-chocolate-850 dark:text-espresso-100">
-                      {i.quantity}x {i.name}
-                    </span>
-                    <span className="text-gold-600 italic font-medium">{i.notes || ""}</span>
-                  </li>
-                ))}
-              </ul>
-              {order.customerNotes && (
-                <p className="mt-3 text-[11px] text-gold-600 bg-gold-500/5 p-2 rounded-lg border border-gold-500/10">
-                  Note: {order.customerNotes}
-                </p>
-              )}
-              {order.waiterNotes && (
-                <p className="mt-2 text-[11px] text-blue-600 bg-blue-550/5 p-2 rounded-lg border border-blue-500/10">
-                  Waiter Notes: {order.waiterNotes}
-                </p>
-              )}
-              {next && (
-                <button
-                  onClick={() => updateStatus(order._id, next)}
-                  className="mt-5 w-full rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 hover:from-gold-600 hover:to-gold-500 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-xs cursor-pointer"
-                >
-                  {buttonLabels[next] || `Mark ${next.replace("_", " ")}`}
-                </button>
-              )}
-            </div>
-          );
-        })}
-        {sorted.length === 0 && (
-          <p className="col-span-full text-center text-sm font-serif font-bold text-stone-400 py-12">
-            No active orders — waiting for tickets...
-          </p>
-        )}
+      <div className="grid gap-8 p-6 lg:grid-cols-2">
+        {/* Ordered / Cooking Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-espresso-800 pb-3">
+            <h2 className="font-serif text-lg font-bold text-white flex items-center gap-2">
+              <span>🍳</span> Ordered & Cooking
+            </h2>
+            <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-xs font-bold text-amber-400 border border-amber-500/30">
+              {sortedOrdered.length} tickets
+            </span>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
+            {sortedOrdered.map((order) => renderOrderCard(order))}
+            {sortedOrdered.length === 0 && (
+              <p className="col-span-full text-center text-sm font-serif font-bold text-stone-400 py-12">
+                No orders cooking.
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Ready / Served Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-espresso-800 pb-3">
+            <h2 className="font-serif text-lg font-bold text-white flex items-center gap-2">
+              <span>🍽️</span> Ready & Served
+            </h2>
+            <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-bold text-emerald-400 border border-emerald-500/30">
+              {sortedServed.length} tickets
+            </span>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
+            {sortedServed.map((order) => renderOrderCard(order))}
+            {sortedServed.length === 0 && (
+              <p className="col-span-full text-center text-sm font-serif font-bold text-stone-400 py-12">
+                No ready or served orders.
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

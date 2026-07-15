@@ -24,7 +24,8 @@ function WaiterBoard() {
   const [editingWaiterNotes, setEditingWaiterNotes] = useState("");
   
   // Filter tabs
-  const [activeTab, setActiveTab] = useState("all"); // "all" | "waiting_for_waiter" | "waiter_reviewing" | "sent_to_kitchen" | "preparing" | "ready_to_serve"
+  const [activeTab, setActiveTab] = useState("active_board"); // "active_board" | "cancelled"
+  const [statusFilter, setStatusFilter] = useState("all"); // "all" | "waiting_for_waiter" | "waiter_reviewing" | "sent_to_kitchen" | "ready_to_serve" | "served"
   const [searchQuery, setSearchQuery] = useState("");
   const [toastMsg, setToastMsg] = useState("");
 
@@ -264,16 +265,7 @@ function WaiterBoard() {
   };
 
   // Filter & Search logic
-  const filteredOrders = orders.filter(order => {
-    // Tab filter
-    if (activeTab === "waiting_for_waiter" && order.status !== "waiting_for_waiter") return false;
-    if (activeTab === "waiter_reviewing" && order.status !== "waiter_reviewing") return false;
-    if (activeTab === "sent_to_kitchen" && !["sent_to_kitchen", "preparing", "pending", "in_progress"].includes(order.status)) return false;
-    if (activeTab === "ready_to_serve" && !["ready_to_serve", "ready"].includes(order.status)) return false;
-    if (activeTab === "served" && order.status !== "served") return false;
-    if (activeTab === "cancelled" && order.status !== "cancelled") return false;
-    
-    // Search query
+  const searchFilter = (order) => {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const matchTable = String(order.tableNumber).includes(q);
@@ -281,9 +273,59 @@ function WaiterBoard() {
       const matchPhone = order.customerPhone?.includes(q);
       return matchTable || matchName || matchPhone;
     }
-
     return true;
+  };
+
+  const matchesStatusFilter = (order, filter) => {
+    if (filter === "all") return true;
+    if (filter === "waiting_for_waiter") return order.status === "waiting_for_waiter";
+    if (filter === "waiter_reviewing") return order.status === "waiter_reviewing";
+    if (filter === "sent_to_kitchen") return ["sent_to_kitchen", "preparing", "pending", "in_progress"].includes(order.status);
+    if (filter === "ready_to_serve") return ["ready_to_serve", "ready"].includes(order.status);
+    if (filter === "served") return order.status === "served";
+    return true;
+  };
+
+  const orderedQueue = orders.filter(o => 
+    ["waiting_for_waiter", "waiter_reviewing", "sent_to_kitchen", "preparing", "pending", "in_progress"].includes(o.status) && 
+    searchFilter(o) &&
+    matchesStatusFilter(o, statusFilter)
+  );
+
+  const servedQueue = orders.filter(o => 
+    ["ready_to_serve", "ready", "served"].includes(o.status) && 
+    searchFilter(o) &&
+    matchesStatusFilter(o, statusFilter)
+  );
+
+  const cancelledQueue = orders.filter(o => 
+    o.status === "cancelled" && 
+    searchFilter(o)
+  );
+
+  const sortedOrderedQueue = [...orderedQueue].sort((a, b) => {
+    const priority = {
+      waiting_for_waiter: 0,
+      pending: 0,
+      waiter_reviewing: 1,
+      sent_to_kitchen: 2,
+      preparing: 3,
+      in_progress: 3,
+    };
+    return (priority[a.status] ?? 4) - (priority[b.status] ?? 4);
   });
+
+  const sortedServedQueue = [...servedQueue].sort((a, b) => {
+    const isReadyA = ["ready_to_serve", "ready"].includes(a.status);
+    const isReadyB = ["ready_to_serve", "ready"].includes(b.status);
+    if (isReadyA && !isReadyB) return -1;
+    if (!isReadyA && isReadyB) return 1;
+    return new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt);
+  });
+
+  const sortedCancelledQueue = [...cancelledQueue].sort((a, b) => 
+    new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)
+  );
 
   const getOrderStatusLabel = (status) => {
     const labels = {
@@ -318,6 +360,133 @@ function WaiterBoard() {
     };
     return colors[status] || "bg-stone-500/10 text-stone-500 border border-stone-500/20";
   };
+
+  const renderOrderCard = (order) => (
+    <motion.div
+      key={order._id}
+      layout
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="rounded-2xl border border-cream-200 dark:border-espresso-800 bg-white dark:bg-espresso-900 p-5 shadow-xs flex flex-col justify-between space-y-4"
+    >
+      <div className="space-y-3">
+        {/* Header row */}
+        <div className="flex justify-between items-start border-b border-cream-100 dark:border-espresso-800 pb-2">
+          <div>
+            <h3 className="font-serif text-base font-bold">Table {order.tableNumber}</h3>
+            <p className="text-[10px] text-stone-400 mt-0.5">
+              Ref: #{order._id?.substring(18, 24).toUpperCase()} • {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </p>
+          </div>
+          <span className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-wider font-bold ${getOrderStatusColor(order.status)}`}>
+            {getOrderStatusLabel(order.status)}
+          </span>
+        </div>
+
+        {/* Customer info */}
+        <div className="text-[11px] space-y-0.5 bg-cream-50/50 dark:bg-espresso-950 p-2 rounded-xl border border-cream-100 dark:border-espresso-800">
+          <p className="font-semibold text-chocolate-850 dark:text-espresso-50">
+            👤 {order.customerName || "Table Guest"}
+          </p>
+          <p className="text-stone-400">
+            📞 {order.customerPhone || "Muffled Phone"} 
+            <span className="text-emerald-500 font-bold ml-1.5">✓ OTP Verified</span>
+          </p>
+          {order.customerNotes && (
+            <p className="text-gold-600 italic mt-1 text-[10px] border-t border-cream-200 dark:border-espresso-800 pt-1">
+              Note: {order.customerNotes}
+            </p>
+          )}
+        </div>
+
+        {/* Items List */}
+        <div className="space-y-1.5 text-xs">
+          <p className="font-semibold uppercase tracking-wider text-[10px] text-stone-400">Items Ordered:</p>
+          <ul className="divide-y divide-cream-100 dark:divide-espresso-800">
+            {order.items?.map((item, idx) => (
+              <li key={idx} className="py-1.5 flex justify-between text-xs">
+                <div>
+                  <span className="font-bold text-chocolate-850 dark:text-espresso-100">{item.quantity}x</span> {item.name}
+                  {item.notes && <p className="text-[10px] text-gold-500 italic mt-0.5 ml-5">↳ {item.notes}</p>}
+                </div>
+                <span className="font-bold">₹{item.price * item.quantity}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Modifications timeline audit logs if exists */}
+        {order.modificationHistory?.length > 0 && (
+          <div className="text-[9px] bg-blue-500/5 text-blue-600 border border-blue-500/10 p-2 rounded-xl mt-2">
+            <p className="font-bold uppercase tracking-wider mb-1">📝 Waiter History Log:</p>
+            <ul className="space-y-0.5">
+              {order.modificationHistory.map((hist, hIdx) => (
+                <li key={hIdx}>
+                  • {hist.changes} ({hist.waiterName})
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      {/* Total billing amount & buttons */}
+      <div className="border-t border-cream-100 dark:border-espresso-800 pt-3 space-y-3">
+        <div className="flex justify-between items-center text-xs">
+          <span className="text-stone-400 font-semibold">Total Invoice Amount:</span>
+          <span className="font-serif text-base font-bold text-gold-500">₹{order.totalAmount}</span>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex gap-2">
+          {order.status === "waiting_for_waiter" && (
+            <>
+              <button
+                onClick={() => startReviewOrder(order)}
+                className="flex-1 rounded-xl border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white py-2 text-xs font-bold uppercase tracking-wider cursor-pointer transition-colors"
+              >
+                Review & Edit
+              </button>
+              <button
+                onClick={() => confirmOrderDirect(order._id)}
+                className="flex-1 rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 hover:from-gold-600 hover:to-gold-500 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-xs cursor-pointer"
+              >
+                Confirm
+              </button>
+            </>
+          )}
+
+          {order.status === "waiter_reviewing" && (
+            <button
+              onClick={() => startReviewOrder(order)}
+              className="w-full rounded-xl bg-blue-600 py-2 text-xs font-bold uppercase tracking-wider text-white cursor-pointer"
+            >
+              Continue Review
+            </button>
+          )}
+
+          {order.status === "ready_to_serve" && (
+            <button
+              onClick={() => markOrderServed(order._id)}
+              className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-xs cursor-pointer animate-pulse"
+            >
+              🍽️ Mark Served
+            </button>
+          )}
+
+          {["waiting_for_waiter", "waiter_reviewing"].includes(order.status) && (
+            <button
+              onClick={() => setCancellingOrder(order)}
+              className="rounded-xl border border-red-500/30 hover:border-red-500 text-red-500 hover:bg-red-500/10 px-3 py-2 text-xs font-bold uppercase tracking-wider cursor-pointer"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
 
   return (
     <div className="min-h-screen bg-cream-50 dark:bg-espresso-950 text-chocolate-900 dark:text-[#f7f3ec] transition-colors duration-150 pb-12 font-sans">
@@ -370,9 +539,9 @@ function WaiterBoard() {
         {/* COUNTER METRICS CARDS */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <div 
-            onClick={() => setActiveTab("waiting_for_waiter")}
+            onClick={() => { setActiveTab("active_board"); setStatusFilter("waiting_for_waiter"); }}
             className={`rounded-2xl border p-4 flex flex-col items-center justify-center text-center shadow-xs cursor-pointer hover:scale-[1.03] transition-all duration-200 ${
-              activeTab === "waiting_for_waiter" ? "bg-amber-500/10 border-amber-500" : "bg-white dark:bg-espresso-900 border-cream-200 dark:border-espresso-800"
+              activeTab === "active_board" && statusFilter === "waiting_for_waiter" ? "bg-amber-500/10 border-amber-500" : "bg-white dark:bg-espresso-900 border-cream-200 dark:border-espresso-800"
             }`}
           >
             <span className="text-2xl">⏳</span>
@@ -381,9 +550,9 @@ function WaiterBoard() {
           </div>
 
           <div 
-            onClick={() => setActiveTab("waiter_reviewing")}
+            onClick={() => { setActiveTab("active_board"); setStatusFilter("waiter_reviewing"); }}
             className={`rounded-2xl border p-4 flex flex-col items-center justify-center text-center shadow-xs cursor-pointer hover:scale-[1.03] transition-all duration-200 ${
-              activeTab === "waiter_reviewing" ? "bg-blue-500/10 border-blue-500" : "bg-white dark:bg-espresso-900 border-cream-200 dark:border-espresso-800"
+              activeTab === "active_board" && statusFilter === "waiter_reviewing" ? "bg-blue-500/10 border-blue-500" : "bg-white dark:bg-espresso-900 border-cream-200 dark:border-espresso-800"
             }`}
           >
             <span className="text-2xl">📋</span>
@@ -392,9 +561,9 @@ function WaiterBoard() {
           </div>
 
           <div 
-            onClick={() => setActiveTab("sent_to_kitchen")}
+            onClick={() => { setActiveTab("active_board"); setStatusFilter("sent_to_kitchen"); }}
             className={`rounded-2xl border p-4 flex flex-col items-center justify-center text-center shadow-xs cursor-pointer hover:scale-[1.03] transition-all duration-200 ${
-              activeTab === "sent_to_kitchen" ? "bg-purple-500/10 border-purple-500" : "bg-white dark:bg-espresso-900 border-cream-200 dark:border-espresso-800"
+              activeTab === "active_board" && statusFilter === "sent_to_kitchen" ? "bg-purple-500/10 border-purple-500" : "bg-white dark:bg-espresso-900 border-cream-200 dark:border-espresso-800"
             }`}
           >
             <span className="text-2xl">🍳</span>
@@ -403,9 +572,9 @@ function WaiterBoard() {
           </div>
 
           <div 
-            onClick={() => setActiveTab("ready_to_serve")}
+            onClick={() => { setActiveTab("active_board"); setStatusFilter("ready_to_serve"); }}
             className={`rounded-2xl border p-4 flex flex-col items-center justify-center text-center shadow-xs cursor-pointer hover:scale-[1.03] transition-all duration-200 ${
-              activeTab === "ready_to_serve" ? "bg-emerald-500/15 border-emerald-500 animate-pulse" : "bg-white dark:bg-espresso-900 border-cream-200 dark:border-espresso-800"
+              activeTab === "active_board" && statusFilter === "ready_to_serve" ? "bg-emerald-500/15 border-emerald-500 animate-pulse" : "bg-white dark:bg-espresso-900 border-cream-200 dark:border-espresso-800"
             }`}
           >
             <span className="text-2xl animate-bounce">🍽️</span>
@@ -414,9 +583,9 @@ function WaiterBoard() {
           </div>
 
           <div 
-            onClick={() => setActiveTab("served")}
+            onClick={() => { setActiveTab("active_board"); setStatusFilter("served"); }}
             className={`rounded-2xl border p-4 flex flex-col items-center justify-center text-center shadow-xs cursor-pointer hover:scale-[1.03] transition-all duration-200 ${
-              activeTab === "served" ? "bg-stone-500/20 border-stone-400" : "bg-white dark:bg-espresso-900 border-cream-200 dark:border-espresso-800"
+              activeTab === "active_board" && statusFilter === "served" ? "bg-stone-500/20 border-stone-400" : "bg-white dark:bg-espresso-900 border-cream-200 dark:border-espresso-800"
             }`}
           >
             <span className="text-2xl">✨</span>
@@ -434,7 +603,6 @@ function WaiterBoard() {
             <span className="text-[10px] uppercase tracking-wider text-stone-400 font-bold mt-0.5">Guest Calls</span>
           </div>
         </div>
-
         {/* WORKSPACE AREA SPLIT SCREEN */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
@@ -448,55 +616,55 @@ function WaiterBoard() {
                 {/* Tabs */}
                 <div className="flex flex-wrap gap-1.5 w-full sm:w-auto">
                   <button
-                    onClick={() => setActiveTab("all")}
+                    onClick={() => { setActiveTab("active_board"); setStatusFilter("all"); }}
                     className={`px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider cursor-pointer ${
-                      activeTab === "all" ? "bg-gold-500 text-white" : "bg-cream-100 dark:bg-espresso-855 text-stone-400"
+                      activeTab === "active_board" && statusFilter === "all" ? "bg-gold-500 text-white" : "bg-cream-100 dark:bg-espresso-855 text-stone-400"
                     }`}
                   >
                     All Active ({orders.filter(o => !["served", "cancelled"].includes(o.status)).length})
                   </button>
                   <button
-                    onClick={() => setActiveTab("waiting_for_waiter")}
+                    onClick={() => { setActiveTab("active_board"); setStatusFilter("waiting_for_waiter"); }}
                     className={`px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider cursor-pointer ${
-                      activeTab === "waiting_for_waiter" ? "bg-amber-500 text-white" : "bg-cream-100 dark:bg-espresso-855 text-stone-400"
+                      activeTab === "active_board" && statusFilter === "waiting_for_waiter" ? "bg-amber-500 text-white" : "bg-cream-100 dark:bg-espresso-855 text-stone-400"
                     }`}
                   >
                     Pending ({getOrderCountByStatus("pending")})
                   </button>
                   <button
-                    onClick={() => setActiveTab("waiter_reviewing")}
+                    onClick={() => { setActiveTab("active_board"); setStatusFilter("waiter_reviewing"); }}
                     className={`px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider cursor-pointer ${
-                      activeTab === "waiter_reviewing" ? "bg-blue-500 text-white" : "bg-cream-100 dark:bg-espresso-855 text-stone-400"
+                      activeTab === "active_board" && statusFilter === "waiter_reviewing" ? "bg-blue-500 text-white" : "bg-cream-100 dark:bg-espresso-855 text-stone-400"
                     }`}
                   >
                     Reviewing ({getOrderCountByStatus("reviewing")})
                   </button>
                   <button
-                    onClick={() => setActiveTab("sent_to_kitchen")}
+                    onClick={() => { setActiveTab("active_board"); setStatusFilter("sent_to_kitchen"); }}
                     className={`px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider cursor-pointer ${
-                      activeTab === "sent_to_kitchen" ? "bg-purple-500 text-white" : "bg-cream-100 dark:bg-espresso-855 text-stone-400"
+                      activeTab === "active_board" && statusFilter === "sent_to_kitchen" ? "bg-purple-500 text-white" : "bg-cream-100 dark:bg-espresso-855 text-stone-400"
                     }`}
                   >
                     Kitchen Prep ({getOrderCountByStatus("kitchen")})
                   </button>
                   <button
-                    onClick={() => setActiveTab("ready_to_serve")}
+                    onClick={() => { setActiveTab("active_board"); setStatusFilter("ready_to_serve"); }}
                     className={`px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider cursor-pointer ${
-                      activeTab === "ready_to_serve" ? "bg-emerald-500 text-white animate-pulse" : "bg-cream-100 dark:bg-espresso-855 text-stone-400"
+                      activeTab === "active_board" && statusFilter === "ready_to_serve" ? "bg-emerald-500 text-white animate-pulse" : "bg-cream-100 dark:bg-espresso-855 text-stone-400"
                     }`}
                   >
                     Ready to Serve ({getOrderCountByStatus("ready")})
                   </button>
                   <button
-                    onClick={() => setActiveTab("served")}
+                    onClick={() => { setActiveTab("active_board"); setStatusFilter("served"); }}
                     className={`px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider cursor-pointer ${
-                      activeTab === "served" ? "bg-stone-500 text-white" : "bg-cream-100 dark:bg-espresso-855 text-stone-400"
+                      activeTab === "active_board" && statusFilter === "served" ? "bg-stone-500 text-white" : "bg-cream-100 dark:bg-espresso-855 text-stone-400"
                     }`}
                   >
                     Served ({orders.filter(o => o.status === "served").length})
                   </button>
                   <button
-                    onClick={() => setActiveTab("cancelled")}
+                    onClick={() => { setActiveTab("cancelled"); }}
                     className={`px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider cursor-pointer ${
                       activeTab === "cancelled" ? "bg-red-500 text-white" : "bg-cream-100 dark:bg-espresso-855 text-stone-400"
                     }`}
@@ -521,143 +689,75 @@ function WaiterBoard() {
             </div>
 
             {/* ORDERS GRID */}
-            <div className="grid gap-6 md:grid-cols-2">
-              <AnimatePresence>
-                {filteredOrders.map((order) => (
-                  <motion.div
-                    key={order._id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="rounded-2xl border border-cream-200 dark:border-espresso-800 bg-white dark:bg-espresso-900 p-5 shadow-xs flex flex-col justify-between space-y-4"
-                  >
-                    <div className="space-y-3">
-                      {/* Header row */}
-                      <div className="flex justify-between items-start border-b border-cream-100 dark:border-espresso-800 pb-2">
-                        <div>
-                          <h3 className="font-serif text-lg font-bold">Table {order.tableNumber}</h3>
-                          <p className="text-[10px] text-stone-400 mt-0.5">
-                            Ref: #{order._id?.substring(18, 24).toUpperCase()} • {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </p>
-                        </div>
-                        <span className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-wider font-bold ${getOrderStatusColor(order.status)}`}>
-                          {getOrderStatusLabel(order.status)}
-                        </span>
+            {activeTab === "active_board" ? (
+              <div className="grid gap-6 md:grid-cols-2">
+                {/* Column 1: Ordered Queue */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between border-b border-cream-200 dark:border-espresso-800 pb-2">
+                    <h3 className="font-serif text-base font-bold text-chocolate-950 dark:text-white flex items-center gap-2">
+                      <span>🍳</span> Ordered Queue
+                    </h3>
+                    <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-xs font-bold text-amber-500 border border-amber-500/30">
+                      {sortedOrderedQueue.length}
+                    </span>
+                  </div>
+                  <div className="space-y-4">
+                    <AnimatePresence>
+                      {sortedOrderedQueue.map((order) => renderOrderCard(order))}
+                    </AnimatePresence>
+                    {sortedOrderedQueue.length === 0 && (
+                      <div className="bg-white dark:bg-espresso-900 border border-cream-200 dark:border-espresso-800 rounded-2xl p-8 text-center text-stone-400 text-xs">
+                        No active cooking orders.
                       </div>
-
-                      {/* Customer info */}
-                      <div className="text-[11px] space-y-0.5 bg-cream-50/50 dark:bg-espresso-950 p-2 rounded-xl border border-cream-100 dark:border-espresso-800">
-                        <p className="font-semibold text-chocolate-850 dark:text-espresso-50">
-                          👤 {order.customerName || "Table Guest"}
-                        </p>
-                        <p className="text-stone-400">
-                          📞 {order.customerPhone || "Muffled Phone"} 
-                          <span className="text-emerald-500 font-bold ml-1.5">✓ OTP Verified</span>
-                        </p>
-                        {order.customerNotes && (
-                          <p className="text-gold-600 italic mt-1 text-[10px] border-t border-cream-200 dark:border-espresso-800 pt-1">
-                            Note: {order.customerNotes}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Items List */}
-                      <div className="space-y-1.5 text-xs">
-                        <p className="font-semibold uppercase tracking-wider text-[10px] text-stone-400">Items Ordered:</p>
-                        <ul className="divide-y divide-cream-100 dark:divide-espresso-800">
-                          {order.items?.map((item, idx) => (
-                            <li key={idx} className="py-1.5 flex justify-between text-xs">
-                              <div>
-                                <span className="font-bold text-chocolate-850 dark:text-espresso-100">{item.quantity}x</span> {item.name}
-                                {item.notes && <p className="text-[10px] text-gold-500 italic mt-0.5 ml-5">↳ {item.notes}</p>}
-                              </div>
-                              <span className="font-bold">₹{item.price * item.quantity}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      {/* Modifications timeline audit logs if exists */}
-                      {order.modificationHistory?.length > 0 && (
-                        <div className="text-[9px] bg-blue-500/5 text-blue-600 border border-blue-500/10 p-2 rounded-xl mt-2">
-                          <p className="font-bold uppercase tracking-wider mb-1">📝 Waiter History Log:</p>
-                          <ul className="space-y-0.5">
-                            {order.modificationHistory.map((hist, hIdx) => (
-                              <li key={hIdx}>
-                                • {hist.changes} ({hist.waiterName})
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Total billing amount & buttons */}
-                    <div className="border-t border-cream-100 dark:border-espresso-800 pt-3 space-y-3">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-stone-400 font-semibold">Total Invoice Amount:</span>
-                        <span className="font-serif text-base font-bold text-gold-500">₹{order.totalAmount}</span>
-                      </div>
-
-                      {/* Action buttons */}
-                      <div className="flex gap-2">
-                        {order.status === "waiting_for_waiter" && (
-                          <>
-                            <button
-                              onClick={() => startReviewOrder(order)}
-                              className="flex-1 rounded-xl border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white py-2 text-xs font-bold uppercase tracking-wider cursor-pointer transition-colors"
-                            >
-                              Review & Edit
-                            </button>
-                            <button
-                              onClick={() => confirmOrderDirect(order._id)}
-                              className="flex-1 rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 hover:from-gold-600 hover:to-gold-500 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-xs cursor-pointer"
-                            >
-                              Confirm
-                            </button>
-                          </>
-                        )}
-
-                        {order.status === "waiter_reviewing" && (
-                          <button
-                            onClick={() => startReviewOrder(order)}
-                            className="w-full rounded-xl bg-blue-600 py-2 text-xs font-bold uppercase tracking-wider text-white cursor-pointer"
-                          >
-                            Continue Review
-                          </button>
-                        )}
-
-                        {order.status === "ready_to_serve" && (
-                          <button
-                            onClick={() => markOrderServed(order._id)}
-                            className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-xs cursor-pointer animate-pulse"
-                          >
-                            🍽️ Mark Served
-                          </button>
-                        )}
-
-                        {["waiting_for_waiter", "waiter_reviewing"].includes(order.status) && (
-                          <button
-                            onClick={() => setCancellingOrder(order)}
-                            className="rounded-xl border border-red-500/30 hover:border-red-500 text-red-500 hover:bg-red-500/10 px-3 py-2 text-xs font-bold uppercase tracking-wider cursor-pointer"
-                          >
-                            Cancel
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-
-              {filteredOrders.length === 0 && (
-                <div className="col-span-2 bg-white dark:bg-espresso-900 border border-cream-200 dark:border-espresso-800 rounded-2xl p-12 text-center text-stone-400">
-                  <span className="text-4xl block mb-2">📁</span>
-                  No active orders match this selection.
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
+
+                {/* Column 2: Served Queue */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between border-b border-cream-200 dark:border-espresso-800 pb-2">
+                    <h3 className="font-serif text-base font-bold text-chocolate-955 dark:text-white flex items-center gap-2">
+                      <span>🍽️</span> Ready & Served
+                    </h3>
+                    <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-bold text-emerald-500 border border-emerald-500/30">
+                      {sortedServedQueue.length}
+                    </span>
+                  </div>
+                  <div className="space-y-4">
+                    <AnimatePresence>
+                      {sortedServedQueue.map((order) => renderOrderCard(order))}
+                    </AnimatePresence>
+                    {sortedServedQueue.length === 0 && (
+                      <div className="bg-white dark:bg-espresso-900 border border-cream-200 dark:border-espresso-800 rounded-2xl p-8 text-center text-stone-400 text-xs">
+                        No ready or served orders.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // Cancelled queue
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-cream-200 dark:border-espresso-800 pb-2">
+                  <h3 className="font-serif text-base font-bold text-chocolate-955 dark:text-white flex items-center gap-2">
+                    <span>❌</span> Cancelled Orders
+                  </h3>
+                  <span className="rounded-full bg-red-500/20 px-2.5 py-0.5 text-xs font-bold text-red-500 border border-red-500/30">
+                    {sortedCancelledQueue.length}
+                  </span>
+                </div>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <AnimatePresence>
+                    {sortedCancelledQueue.map((order) => renderOrderCard(order))}
+                  </AnimatePresence>
+                </div>
+                {sortedCancelledQueue.length === 0 && (
+                  <div className="bg-white dark:bg-espresso-900 border border-cream-200 dark:border-espresso-800 rounded-2xl p-12 text-center text-stone-400 text-xs">
+                    No cancelled orders found.
+                  </div>
+                )}
+              </div>
+            )}
 
           </div>
 

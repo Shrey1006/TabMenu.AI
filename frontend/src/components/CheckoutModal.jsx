@@ -30,6 +30,10 @@ export default function CheckoutModal({
   const [mockOtp, setMockOtp] = useState(""); // For easy testing in dev
   const [isRzpOpen, setIsRzpOpen] = useState(false);
   
+  // Robot check verification states
+  const [isRobotChecked, setIsRobotChecked] = useState(false);
+  const [verifyingRobot, setVerifyingRobot] = useState(false);
+  
   const timerRef = useRef(null);
 
   // Load profile on modal open
@@ -42,6 +46,8 @@ export default function CheckoutModal({
       setErrorMsg("");
       setSuccessMsg("");
       setMockOtp("");
+      setIsRobotChecked(false);
+      setVerifyingRobot(false);
       
       const saved = localStorage.getItem(PROFILE_STORAGE_KEY);
       if (saved) {
@@ -105,43 +111,43 @@ export default function CheckoutModal({
     }
   };
 
-  // Verify OTP handler
-  const handleVerifyOtp = async (e) => {
-    if (e) e.preventDefault();
-    if (!otpCode || otpCode.length !== 6) {
-      setErrorMsg("Please enter a valid 6-digit verification code.");
-      return;
-    }
+  // Verify Robot check handler
+  const handleRobotVerify = async () => {
+    if (isRobotChecked || verifyingRobot) return;
 
-    setLoading(true);
+    setVerifyingRobot(true);
     setErrorMsg("");
     setSuccessMsg("");
 
-    try {
-      const { data } = await api.post("/otp/verify", { phone, otp: otpCode });
-      setOtpToken(data.otpToken);
-      setSuccessMsg("✓ Mobile number verified!");
-      
-      // Save profile details locally
-      localStorage.setItem(
-        PROFILE_STORAGE_KEY,
-        JSON.stringify({ name, phone, email })
-      );
+    // Simulate verification delay (1.2 seconds)
+    setTimeout(async () => {
+      try {
+        const { data } = await api.post("/otp/verify", { phone, otp: "not human" });
+        setOtpToken(data.otpToken);
+        setSuccessMsg("✓ Verification successful!");
+        setIsRobotChecked(true);
+        setVerifyingRobot(false);
 
-      // Show success animation for 1.5s, then advance
-      setTimeout(() => {
-        if (mode === "order") {
-          setStep("confirm");
-        } else {
-          setIsRzpOpen(true);
-        }
-      }, 1500);
+        // Save profile details locally
+        localStorage.setItem(
+          PROFILE_STORAGE_KEY,
+          JSON.stringify({ name, phone, email })
+        );
 
-    } catch (err) {
-      setErrorMsg(err.response?.data?.message || "Verification failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+        // Advance to next step after short delay
+        setTimeout(() => {
+          if (mode === "order") {
+            setStep("confirm");
+          } else {
+            setIsRzpOpen(true);
+          }
+        }, 1200);
+
+      } catch (err) {
+        setErrorMsg(err.response?.data?.message || "Verification failed. Please try again.");
+        setVerifyingRobot(false);
+      }
+    }, 1200);
   };
 
   // Final Order confirmation
@@ -208,16 +214,16 @@ export default function CheckoutModal({
               {/* Title Header */}
               <div className="text-center mb-6">
                 <span className="text-3xl">
-                  {step === "details" ? "🍳" : step === "otp" ? "🔑" : "📋"}
+                  {step === "details" ? "🍳" : step === "otp" ? "👤" : "📋"}
                 </span>
                 <h3 className="font-serif text-2xl font-bold tracking-wide mt-2">
                   {step === "details" && "Guest Information"}
-                  {step === "otp" && "Mobile Verification"}
+                  {step === "otp" && "Human Verification"}
                   {step === "confirm" && "Order Summary"}
                 </h3>
                 <p className="text-xs uppercase tracking-wider text-gold-500 font-semibold mt-1">
                   {step === "details" && "Contact details for notification"}
-                  {step === "otp" && "SMS OTP validation check"}
+                  {step === "otp" && "Verify that you are human"}
                   {step === "confirm" && "Verify items and submit"}
                 </p>
                 <div className="h-[2px] w-12 bg-gold-500 mx-auto mt-2" />
@@ -287,71 +293,59 @@ export default function CheckoutModal({
                     {loading ? (
                       <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
-                      "Send Verification OTP"
+                      "Verify & Continue"
                     )}
                   </button>
                 </form>
               )}
 
-              {/* STEP 2: OTP Verification */}
+              {/* STEP 2: Robot Verification Checkbox */}
               {step === "otp" && (
-                <form onSubmit={handleVerifyOtp} className="space-y-4 text-sm text-center">
+                <form onSubmit={(e) => e.preventDefault()} className="space-y-4 text-sm text-center">
                   <p className="text-xs text-stone-500 dark:text-stone-300">
-                    We sent a verification code to <span className="font-bold">{phone}</span>
+                    To complete checkout, please check the box below:
                   </p>
 
-                  {mockOtp && (
-                    <div className="bg-gold-500/10 border border-gold-500/20 text-gold-600 rounded-xl p-3 text-xs inline-block mx-auto font-bold uppercase tracking-wider">
-                      🔑 Demo Mode Code: {mockOtp}
+                  <div className="flex items-center justify-between bg-white dark:bg-espresso-955 border border-cream-200 dark:border-espresso-750 p-4 rounded-xl shadow-xs max-w-sm mx-auto my-6 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={handleRobotVerify}
+                        disabled={isRobotChecked || verifyingRobot}
+                        className={`h-7 w-7 rounded-lg border flex items-center justify-center cursor-pointer transition-all duration-150 outline-none ${
+                          isRobotChecked
+                            ? "border-emerald-500 bg-emerald-500 text-white"
+                            : "border-stone-300 dark:border-espresso-700 bg-cream-50 dark:bg-espresso-900 hover:border-gold-500"
+                        }`}
+                      >
+                        {verifyingRobot && (
+                          <span className="h-4 w-4 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
+                        )}
+                        {isRobotChecked && (
+                          <svg className="h-4.5 w-4.5 stroke-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </button>
+                      <span className="text-sm font-semibold text-chocolate-850 dark:text-espresso-100 select-none">
+                        I'm not a robot
+                      </span>
                     </div>
-                  )}
-
-                  <div className="flex justify-center my-4">
-                    <input
-                      type="text"
-                      maxLength={6}
-                      required
-                      value={otpCode}
-                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-                      placeholder="Enter 6-digit OTP"
-                      className="text-center tracking-widest text-lg font-bold w-48 rounded-xl border border-cream-200 dark:border-espresso-750 px-4 py-3.5 bg-white dark:bg-espresso-950 outline-none focus:border-gold-500 dark:text-stone-100"
-                    />
-                  </div>
-
-                  <div className="text-xs text-stone-400">
-                    {countdown > 0 ? (
-                      <p>Code expires in <span className="text-gold-500 font-mono font-bold">{formatTime(countdown)}</span></p>
-                    ) : (
-                      <p className="text-red-500 font-bold">Code has expired.</p>
-                    )}
+                    <div className="flex flex-col items-center justify-center opacity-70">
+                      <svg className="h-6 w-6 text-gold-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                      <span className="text-[8px] uppercase tracking-wider text-stone-400 font-bold mt-1">Verify</span>
+                    </div>
                   </div>
 
                   <div className="flex gap-3 justify-center items-center mt-6">
                     <button
                       type="button"
                       onClick={() => setStep("details")}
-                      className="rounded-xl border border-cream-300 dark:border-espresso-700 px-4 py-3 text-xs font-bold uppercase tracking-wider text-chocolate-700 dark:text-espresso-100 hover:bg-cream-100 dark:hover:bg-espresso-800 transition-all cursor-pointer"
+                      className="rounded-xl border border-cream-300 dark:border-espresso-700 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-chocolate-700 dark:text-espresso-100 hover:bg-cream-100 dark:hover:bg-espresso-800 transition-all cursor-pointer"
                     >
-                      ← Edit Phone
-                    </button>
-                    <button
-                      type="button"
-                      disabled={countdown > 240 || resendAttempts >= 3}
-                      onClick={handleSendOtp}
-                      className="rounded-xl border border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-white px-4 py-3 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gold-500"
-                    >
-                      Resend Code {resendAttempts > 1 && `(${resendAttempts}/3)`}
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={loading || countdown === 0}
-                      className="rounded-xl bg-gold-500 hover:bg-gold-600 text-white font-bold px-6 py-3.5 text-xs font-bold uppercase tracking-wider shadow-md cursor-pointer disabled:opacity-50"
-                    >
-                      {loading ? (
-                        <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
-                      ) : (
-                        "Verify Code"
-                      )}
+                      ← Back
                     </button>
                   </div>
                 </form>
