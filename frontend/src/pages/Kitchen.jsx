@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { SocketProvider, useSocket } from "../context/SocketContext";
 import { useTheme } from "../context/ThemeContext";
 
-const STATUS_FLOW = ["pending", "in_progress", "ready", "served"];
+const STATUS_FLOW = ["sent_to_kitchen", "preparing", "ready_to_serve", "served"];
 
 function KitchenBoard() {
   const socket = useSocket();
@@ -32,12 +32,25 @@ function KitchenBoard() {
   };
 
   const nextStatus = (current) => {
-    const idx = STATUS_FLOW.indexOf(current);
+    // Map legacy status if present
+    let normalized = current;
+    if (current === "pending") normalized = "sent_to_kitchen";
+    if (current === "in_progress") normalized = "preparing";
+    if (current === "ready") normalized = "ready_to_serve";
+
+    const idx = STATUS_FLOW.indexOf(normalized);
     return STATUS_FLOW[idx + 1] || null;
   };
 
   const sorted = [...orders].sort((a, b) => {
-    const priority = { pending: 0, in_progress: 1, ready: 2 };
+    const priority = { 
+      sent_to_kitchen: 0, 
+      pending: 0,
+      preparing: 1, 
+      in_progress: 1,
+      ready_to_serve: 2,
+      ready: 2 
+    };
     return (priority[a.status] ?? 3) - (priority[b.status] ?? 3);
   });
 
@@ -79,10 +92,27 @@ function KitchenBoard() {
         {sorted.map((order) => {
           const next = nextStatus(order.status);
           const statusColors = {
+            sent_to_kitchen: "border-yellow-500",
             pending: "border-yellow-500",
-            in_progress: "border-blue-500",
+            preparing: "border-orange-500",
+            in_progress: "border-orange-500",
+            ready_to_serve: "border-green-500",
             ready: "border-green-500",
           };
+          const statusLabels = {
+            sent_to_kitchen: "Accepted",
+            pending: "Accepted",
+            preparing: "Cooking",
+            in_progress: "Cooking",
+            ready_to_serve: "Ready",
+            ready: "Ready",
+          };
+          const buttonLabels = {
+            preparing: "Start Cooking",
+            ready_to_serve: "Mark Ready",
+            served: "Mark Served"
+          };
+          
           return (
             <div
               key={order._id}
@@ -91,11 +121,11 @@ function KitchenBoard() {
               <div className="flex justify-between items-center border-b border-cream-100 dark:border-espresso-800 pb-2">
                 <h2 className="font-serif text-lg font-bold">Table {order.tableNumber}</h2>
                 <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
-                  order.status === "pending" ? "bg-yellow-500/10 text-yellow-600" :
-                  order.status === "in_progress" ? "bg-blue-500/10 text-blue-600" :
+                  ["sent_to_kitchen", "pending"].includes(order.status) ? "bg-yellow-500/10 text-yellow-600" :
+                  ["preparing", "in_progress"].includes(order.status) ? "bg-orange-500/10 text-orange-600" :
                   "bg-green-500/10 text-green-600"
                 }`}>
-                  {order.status?.replace("_", " ")}
+                  {statusLabels[order.status] || order.status?.replace("_", " ")}
                 </span>
               </div>
               <ul className="mt-3 space-y-2 text-xs">
@@ -113,12 +143,17 @@ function KitchenBoard() {
                   Note: {order.customerNotes}
                 </p>
               )}
+              {order.waiterNotes && (
+                <p className="mt-2 text-[11px] text-blue-600 bg-blue-550/5 p-2 rounded-lg border border-blue-500/10">
+                  Waiter Notes: {order.waiterNotes}
+                </p>
+              )}
               {next && (
                 <button
                   onClick={() => updateStatus(order._id, next)}
                   className="mt-5 w-full rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 hover:from-gold-600 hover:to-gold-500 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-xs cursor-pointer"
                 >
-                  Mark {next.replace("_", " ")}
+                  {buttonLabels[next] || `Mark ${next.replace("_", " ")}`}
                 </button>
               )}
             </div>

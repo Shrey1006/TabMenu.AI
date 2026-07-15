@@ -10,6 +10,8 @@ import tableRoutes from './routes/tables.js';
 import orderRoutes from './routes/orders.js';
 import feedbackRoutes from './routes/feedback.js';
 import adminRoutes from './routes/admin.js';
+import otpRoutes from './routes/otp.js';
+import waiterRequestRoutes from './routes/waiterRequests.js';
 import Order from './models/Order.js';
 import Table from './models/Table.js';
 
@@ -91,6 +93,8 @@ app.use('/api/tables', tableRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/otp', otpRoutes);
+app.use('/api/waiter-requests', waiterRequestRoutes);
 
 io.on('connection', (socket) => {
   const { role, table } = socket.handshake.query;

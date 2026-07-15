@@ -21,6 +21,12 @@ function CustomerApp({ qrToken, tableNumber }) {
   const [cart, setCart] = useState([]);
   const [order, setOrder] = useState(null);
   
+  // Waiter request state (synced with localStorage for persistence)
+  const [waiterRequest, setWaiterRequest] = useState(() => {
+    const saved = localStorage.getItem(`active-waiter-request-${tableNumber}`);
+    return saved ? JSON.parse(saved) : null;
+  });
+
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState({
@@ -67,7 +73,7 @@ function CustomerApp({ qrToken, tableNumber }) {
     loadMenu();
   }, []);
 
-  // Fetch active order for this table on load (in case they reload page after ordering)
+  // Fetch active order for this table on load
   useEffect(() => {
     if (tableNumber && qrToken) {
       api.get(`/orders/active/table/${tableNumber}?token=${qrToken}`)
@@ -79,16 +85,75 @@ function CustomerApp({ qrToken, tableNumber }) {
     }
   }, [tableNumber, qrToken]);
 
+  const updateWaiterRequestState = (req) => {
+    setWaiterRequest(req);
+    if (req) {
+      localStorage.setItem(`active-waiter-request-${tableNumber}`, JSON.stringify(req));
+    } else {
+      localStorage.removeItem(`active-waiter-request-${tableNumber}`);
+    }
+  };
+
   useEffect(() => {
     if (!socket || !tableNumber) return;
     socket.emit("join", { table: String(tableNumber) });
-    socket.on(`table:${tableNumber}:order`, setOrder);
-    socket.on("order:update", (o) => {
-      if (o.tableNumber === tableNumber) setOrder(o);
+    
+    socket.on(`table:${tableNumber}:order`, (o) => {
+      setOrder(o);
     });
+
+    socket.on("order:update", (o) => {
+      if (Number(o.tableNumber) === Number(tableNumber)) {
+        setOrder((prevOrder) => {
+          if (prevOrder) {
+            // Check status transitions
+            if (o.status !== prevOrder.status) {
+              if (o.status === "waiter_reviewing") {
+                showToast("📋 Waiter is reviewing your order...");
+              } else if (o.status === "sent_to_kitchen") {
+                showToast("🍳 Order confirmed! Sent to kitchen.");
+              } else if (o.status === "preparing") {
+                showToast("🔥 Chef has started preparing your food.");
+              } else if (o.status === "ready_to_serve") {
+                showToast("🍽️ Food is ready! Waiter is serving it shortly.");
+              } else if (o.status === "served") {
+                showToast("✨ Food served! Enjoy your meal.");
+              } else if (o.status === "cancelled") {
+                showToast(`❌ Order cancelled: ${o.cancellationReason || "No reason specified"}`);
+              }
+            }
+
+            // Check modification history changes
+            if (o.modificationHistory && o.modificationHistory.length > (prevOrder.modificationHistory?.length || 0)) {
+              const latest = o.modificationHistory[o.modificationHistory.length - 1];
+              showToast(`📝 Order updated by waiter: ${latest.changes}`);
+            }
+          }
+          return o;
+        });
+      }
+    });
+
+    socket.on("waiter:request_update", (req) => {
+      if (Number(req.tableNumber) === Number(tableNumber)) {
+        if (req.status === "completed") {
+          updateWaiterRequestState(null);
+          showToast("🛎️ Waiter request completed!");
+        } else {
+          updateWaiterRequestState(req);
+          if (req.status === "accepted") {
+            showToast("🛎️ Waiter accepted your request!");
+          } else if (req.status === "on_the_way") {
+            showToast("🚶 Waiter is on the way!");
+          }
+        }
+      }
+    });
+
     return () => {
       socket.off(`table:${tableNumber}:order`);
       socket.off("order:update");
+      socket.off("waiter:request_update");
     };
   }, [socket, tableNumber]);
 
@@ -125,11 +190,14 @@ function CustomerApp({ qrToken, tableNumber }) {
   };
 
   const callWaiter = async () => {
-    if (!order) return;
     try {
-      await api.post(`/orders/${order._id}/call-waiter`);
-      showToast("🛎️ Waiter notified! Assistance is on the way.");
-    } catch {
+      const { data } = await api.post("/waiter-requests", {
+        tableNumber: Number(tableNumber),
+        customerName: order?.customerName || "Table Guest",
+      });
+      updateWaiterRequestState(data);
+      showToast("🛎️ Your request has been sent. A waiter will be with you shortly.");
+    } catch (error) {
       showToast("Unable to notify waiter. Please request help directly.");
     }
   };
@@ -150,7 +218,7 @@ function CustomerApp({ qrToken, tableNumber }) {
     }
   };
 
-  // Live filter and search logic
+  // Filter and search logic
   const filteredMenu = useMemo(() => {
     let result = [...menu];
 
@@ -208,7 +276,7 @@ function CustomerApp({ qrToken, tableNumber }) {
     setOpenCategories((prev) => ({ ...prev, [cat]: !prev[cat] }));
   };
 
-  // Dine-in order placing flow (send to kitchen first)
+  // Dine-in order placing flow
   const handleConfirmOrder = async (customerDetails) => {
     setLoading(true);
     setIsOrderConfirmOpen(false);
@@ -219,12 +287,13 @@ function CustomerApp({ qrToken, tableNumber }) {
         customerName: customerDetails.name,
         customerPhone: customerDetails.phone,
         customerNotes: `Guest: ${customerDetails.name} • Dine-In`,
+        otpToken: customerDetails.otpToken, // Send verified OTP token!
       };
 
       const { data: newOrder } = await api.post("/orders", orderPayload);
       setOrder(newOrder);
       setCart([]);
-      showToast("🍳 Dine-in order sent to kitchen!");
+      showToast("🛎️ Order submitted! Waiting for waiter review.");
     } catch (err) {
       showToast(err.response?.data?.message || "Order placement failed.");
     } finally {
@@ -232,7 +301,7 @@ function CustomerApp({ qrToken, tableNumber }) {
     }
   };
 
-  // Dine-in pay flow (Razorpay payment success)
+  // Dine-in pay flow
   const handlePaymentSuccess = async (paymentId, customerDetails) => {
     if (!order) return;
     setLoading(true);
@@ -254,12 +323,45 @@ function CustomerApp({ qrToken, tableNumber }) {
   };
 
   const statusColor = {
-    pending: "bg-yellow-100 dark:bg-yellow-950/20 text-yellow-800 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-900/60",
-    in_progress: "bg-blue-100 dark:bg-blue-950/20 text-blue-800 dark:text-blue-400 border border-blue-200 dark:border-blue-900/60",
-    ready: "bg-green-100 dark:bg-green-950/20 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-900/60",
-    served: "bg-stone-100 dark:bg-stone-900 text-stone-800 dark:text-stone-300 border border-stone-200 dark:border-stone-800",
+    waiting_for_waiter: "bg-yellow-100 dark:bg-yellow-950/20 text-yellow-800 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-900/60",
+    waiter_reviewing: "bg-blue-100 dark:bg-blue-950/20 text-blue-800 dark:text-blue-400 border border-blue-200 dark:border-blue-900/60",
+    sent_to_kitchen: "bg-purple-100 dark:bg-purple-950/20 text-purple-800 dark:text-purple-400 border border-purple-200 dark:border-purple-900/60",
+    preparing: "bg-orange-100 dark:bg-orange-950/20 text-orange-800 dark:text-orange-400 border border-orange-200 dark:border-orange-900/60",
+    ready_to_serve: "bg-green-100 dark:bg-green-950/20 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-900/60",
+    served: "bg-stone-100 dark:bg-stone-900 text-stone-800 dark:text-stone-300 border border-stone-200 dark:border-stone-855",
+    cancelled: "bg-red-100 dark:bg-red-950/20 text-red-800 dark:text-red-400 border border-red-200 dark:border-red-900/60",
     paid: "bg-gold-500/10 text-gold-500 border border-gold-500/20",
+    // Compatibility fallbacks
+    pending: "bg-yellow-100 dark:bg-yellow-950/20 text-yellow-800 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-900/60",
+    in_progress: "bg-orange-100 dark:bg-orange-950/20 text-orange-800 dark:text-orange-400 border border-orange-200 dark:border-orange-900/60",
+    ready: "bg-green-100 dark:bg-green-950/20 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-900/60",
   };
+
+  const getStepIndex = (status) => {
+    const statusIndices = {
+      waiting_for_waiter: 1,
+      waiter_reviewing: 1,
+      sent_to_kitchen: 2,
+      preparing: 3,
+      ready_to_serve: 4,
+      served: 5,
+      paid: 5,
+      // Compatibility fallbacks
+      pending: 1,
+      in_progress: 3,
+      ready: 4,
+    };
+    return statusIndices[status] !== undefined ? statusIndices[status] : 0;
+  };
+
+  const steps = [
+    { label: "Verified Mobile", icon: "📱" },
+    { label: "Waiter Confirmed", icon: "🛎️" },
+    { label: "Sent to Kitchen", icon: "🍳" },
+    { label: "Cooking", icon: "🔥" },
+    { label: "Ready to Serve", icon: "🍽️" },
+    { label: "Served", icon: "✨" },
+  ];
 
   return (
     <div className="min-h-screen bg-cream-50 dark:bg-espresso-950 text-chocolate-900 dark:text-[#f7f3ec] transition-colors duration-200 pb-28">
@@ -295,7 +397,7 @@ function CustomerApp({ qrToken, tableNumber }) {
           <div className="flex items-center gap-3">
             <button
               onClick={toggleTheme}
-              className="rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider bg-cream-100 dark:bg-espresso-800 border border-cream-200 dark:border-espresso-700 text-chocolate-850 dark:text-espresso-50 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              className="rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider bg-cream-100 dark:bg-espresso-800 border border-cream-200 dark:border-espresso-775 text-chocolate-850 dark:text-espresso-50 hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               {isDark ? "☀️ Light" : "🌙 Dark"}
             </button>
@@ -318,6 +420,31 @@ function CustomerApp({ qrToken, tableNumber }) {
         ) : (
           <div className="mx-auto max-w-4xl px-4 py-6 space-y-6">
             
+            {/* Waiter Request Alert */}
+            {waiterRequest && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-2xl border border-gold-500/30 bg-white dark:bg-espresso-900 p-5 shadow-sm flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl animate-bounce">🛎️</span>
+                  <div>
+                    <h4 className="font-serif text-sm font-bold text-gold-500">Service Call Status</h4>
+                    <p className="text-xs text-stone-500 dark:text-espresso-100 font-semibold mt-0.5">
+                      {waiterRequest.status === "pending" && "🛎️ Request Sent (Waiter Notified)"}
+                      {waiterRequest.status === "accepted" && "🤝 Waiter Accepted Request"}
+                      {waiterRequest.status === "on_the_way" && "🚶 Waiter is on the way!"}
+                      {waiterRequest.status === "completed" && "👋 Waiter Arrived"}
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] uppercase font-bold px-3 py-1 rounded-full bg-gold-500/10 text-gold-500 border border-gold-500/20 animate-pulse">
+                  {waiterRequest.status === "pending" ? "Notified" : waiterRequest.status === "on_the_way" ? "On The Way" : waiterRequest.status}
+                </span>
+              </motion.div>
+            )}
+
             {/* Active Order Card */}
             {order && (
               <motion.div
@@ -342,6 +469,59 @@ function CustomerApp({ qrToken, tableNumber }) {
                     </li>
                   ))}
                 </ul>
+
+                {/* Progress Timeline Stepper */}
+                {order.status !== "cancelled" ? (
+                  <div className="py-4 border-t border-cream-100 dark:border-espresso-800">
+                    <div className="relative flex justify-between items-center w-full">
+                      {/* Connector Line */}
+                      <div className="absolute top-4 left-0 right-0 h-1 bg-cream-200 dark:bg-espresso-800 -z-10 rounded-full" />
+                      <div 
+                        className="absolute top-4 left-0 h-1 bg-gold-500 transition-all duration-500 rounded-full -z-10" 
+                        style={{ width: `${(getStepIndex(order.status) / 5) * 100}%` }}
+                      />
+
+                      {steps.map((st, idx) => {
+                        const currentIdx = getStepIndex(order.status);
+                        const isCompleted = idx < currentIdx;
+                        const isActive = idx === currentIdx;
+                        return (
+                          <div key={idx} className="flex flex-col items-center flex-1">
+                            <motion.div
+                              animate={isActive ? { scale: [1, 1.1, 1] } : {}}
+                              transition={{ repeat: Infinity, duration: 2 }}
+                              className={`h-9 w-9 rounded-full flex items-center justify-center text-sm font-semibold transition-all border shadow-sm ${
+                                isCompleted ? "bg-gold-500 text-white border-gold-600" :
+                                isActive ? "bg-cream-50 dark:bg-espresso-950 text-gold-500 border-gold-500 font-bold ring-4 ring-gold-500/20" :
+                                "bg-cream-100 dark:bg-espresso-800 text-stone-400 border-cream-200 dark:border-espresso-750"
+                              }`}
+                            >
+                              {isCompleted ? "✓" : st.icon}
+                            </motion.div>
+                            <span className={`text-[9px] uppercase tracking-wider font-bold mt-1.5 text-center block ${
+                              isActive ? "text-gold-500" :
+                              isCompleted ? "text-chocolate-850 dark:text-espresso-100" :
+                              "text-stone-400"
+                            }`}>
+                              {st.label}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-650 text-xs space-y-1.5">
+                    <p className="font-bold">❌ Order Cancelled</p>
+                    <p className="opacity-90">Reason: {order.cancellationReason || "Not specified"}</p>
+                    {order.modificationHistory?.length > 0 && (
+                      <p className="text-[10px] text-stone-400 pt-1 border-t border-red-500/10">
+                        History: {order.modificationHistory.map(h => h.changes).join(" | ")}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between border-t border-cream-100 dark:border-espresso-800 pt-3">
                   <p className="font-bold">Total Bill: ₹{order.totalAmount}</p>
                   <div className="flex gap-2">
@@ -413,7 +593,7 @@ function CustomerApp({ qrToken, tableNumber }) {
                   onClick={() => setActiveFilters(prev => ({ ...prev, spicy: !prev.spicy }))}
                   className={`rounded-lg px-3 py-1.5 text-xs font-semibold border transition-all cursor-pointer ${
                     activeFilters.spicy
-                      ? "bg-red-500/10 text-red-600 border-red-500/30 font-bold"
+                      ? "bg-red-500/10 text-red-650 border-red-500/30 font-bold"
                       : "bg-white dark:bg-espresso-900 text-stone-500 dark:text-espresso-100 border-cream-200 dark:border-espresso-750"
                   }`}
                 >
@@ -489,7 +669,7 @@ function CustomerApp({ qrToken, tableNumber }) {
                     value={feedback}
                     onChange={(e) => setFeedback(e.target.value)}
                     placeholder="Tell us about your culinary experience..."
-                    className="w-full rounded-xl border border-cream-200 dark:border-espresso-750 p-4 bg-cream-50/20 dark:bg-espresso-950 outline-none focus:border-gold-500 text-xs"
+                    className="w-full rounded-xl border border-cream-200 dark:border-espresso-750 p-4 bg-cream-50/20 dark:bg-espresso-955 outline-none focus:border-gold-500 text-xs"
                   />
                   <button
                     onClick={submitFeedback}
@@ -572,8 +752,8 @@ function CustomerApp({ qrToken, tableNumber }) {
 
 export default function Customer() {
   const query = new URLSearchParams(window.location.search);
-  const token = query.get("token") || localStorage.getItem("last-table-token") || "";
-  const tableNum = query.get("table") || localStorage.getItem("last-table-number") || "";
+  const token = query.get("token") || "";
+  const tableNum = query.get("table") || "";
 
   const [qrToken, setQrToken] = useState(token);
   const [tableNumber, setTableNumber] = useState(tableNum ? Number(tableNum) : "");
