@@ -23,4 +23,6 @@ const menuItemSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+menuItemSchema.index({ available: 1, category: 1, displayOrder: 1 });
+
 export default mongoose.model('MenuItem', menuItemSchema);

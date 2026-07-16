@@ -2,6 +2,7 @@ import express from 'express';
 import Category from '../models/Category.js';
 import MenuItem from '../models/MenuItem.js';
 import { auth } from '../middleware/auth.js';
+import { clearMenuCache } from '../utils/cache.js';
 
 const router = express.Router();
 
@@ -56,6 +57,7 @@ router.post('/', auth(['admin']), async (req, res) => {
       active: active !== undefined ? active : true,
     });
 
+    clearMenuCache();
     res.status(201).json(category);
   } catch (error) {
     res.status(500).json({ message: 'Error creating category' });
@@ -91,6 +93,7 @@ router.put('/:id', auth(['admin']), async (req, res) => {
     if (active !== undefined) category.active = active;
 
     const updated = await category.save();
+    clearMenuCache();
     res.json(updated);
   } catch (error) {
     res.status(500).json({ message: 'Error updating category' });
@@ -111,6 +114,7 @@ router.delete('/:id', auth(['admin']), async (req, res) => {
     // Delete the category itself
     await Category.findByIdAndDelete(req.params.id);
 
+    clearMenuCache();
     res.json({ message: 'Category and all associated menu items deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting category' });
