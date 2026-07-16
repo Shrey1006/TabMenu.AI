@@ -222,7 +222,7 @@ router.patch(
 // PATCH /api/orders/:id/review - Waiter reviews, edits, confirms, or cancels orders
 router.patch(
   "/:id/review",
-  auth(["waiter", "admin"]),
+  auth(["waiter", "admin", "kitchen"]),
   async (req, res) => {
     const { status, items, waiterNotes, cancellationReason } = req.body;
     const waiterName = req.user.name || "Floor Waiter";

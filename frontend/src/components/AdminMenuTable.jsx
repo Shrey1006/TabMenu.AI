@@ -47,7 +47,7 @@ export default function AdminMenuTable({ menu, onEdit, onDelete, onToggleAvailab
                 </td>
 
                 <td className="p-4 font-medium capitalize text-stone-500 dark:text-espresso-100">
-                  {item.category}
+                  {item.category?.name || "Uncategorized"}
                 </td>
 
                 <td className="p-4 font-bold text-[#b69234]">

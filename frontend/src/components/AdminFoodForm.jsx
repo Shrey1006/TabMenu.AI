@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
+import api from "../lib/api.js";
 
 export default function AdminFoodForm({ item, onSubmit, onCancel }) {
   const [name, setName] = useState("");
   const [price, setPrice] = useState(0);
-  const [category, setCategory] = useState("Starters");
+  const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState("");
   const [veg, setVeg] = useState(true);
@@ -15,19 +16,34 @@ export default function AdminFoodForm({ item, onSubmit, onCancel }) {
   const [spiceLevel, setSpiceLevel] = useState("none");
   const [displayOrder, setDisplayOrder] = useState(0);
 
-  const categoriesList = [
-    "Starters",
-    "Main Course",
-    "Breads",
-    "Desserts",
-    "Beverages",
-  ];
+  // Dynamic categories state
+  const [categories, setCategories] = useState([]);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [quickAddLoading, setQuickAddLoading] = useState(false);
+
+  // Fetch categories
+  const loadCategories = async () => {
+    try {
+      const { data } = await api.get("/categories/all");
+      setCategories(data);
+      if (!item && data.length > 0 && !category) {
+        setCategory(data[0]._id);
+      }
+    } catch {
+      console.error("Failed to load categories.");
+    }
+  };
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
 
   useEffect(() => {
     if (item) {
       setName(item.name || "");
       setPrice(item.price || 0);
-      setCategory(item.category || "Starters");
+      setCategory(item.category?._id || item.category || "");
       setDescription(item.description || "");
       setImage(item.image || "");
       setVeg(item.veg !== undefined ? item.veg : true);
@@ -42,7 +58,6 @@ export default function AdminFoodForm({ item, onSubmit, onCancel }) {
       // Defaults
       setName("");
       setPrice(0);
-      setCategory("Starters");
       setDescription("");
       setImage("");
       setVeg(true);
@@ -53,8 +68,32 @@ export default function AdminFoodForm({ item, onSubmit, onCancel }) {
       setPrepTimeMinutes(15);
       setSpiceLevel("none");
       setDisplayOrder(0);
+      if (categories.length > 0) {
+        setCategory(categories[0]._id);
+      } else {
+        setCategory("");
+      }
     }
-  }, [item]);
+  }, [item, categories]);
+
+  const handleQuickAdd = async () => {
+    if (!newCatName.trim()) return;
+    setQuickAddLoading(true);
+    try {
+      const { data: newCat } = await api.post("/categories", {
+        name: newCatName.trim(),
+        displayOrder: categories.length + 1,
+      });
+      setCategories((prev) => [...prev, newCat]);
+      setCategory(newCat._id);
+      setNewCatName("");
+      setShowQuickAdd(false);
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to create category");
+    } finally {
+      setQuickAddLoading(false);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -113,20 +152,52 @@ export default function AdminFoodForm({ item, onSubmit, onCancel }) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="block text-xs uppercase tracking-wider text-stone-500 dark:text-espresso-100 font-medium mb-1">
-            Category
-          </label>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="w-full rounded-lg border border-cream-200 dark:border-espresso-750 px-3 py-2 bg-cream-50/30 dark:bg-espresso-950 outline-none focus:border-gold-500"
-          >
-            {categoriesList.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-xs uppercase tracking-wider text-stone-500 dark:text-espresso-100 font-medium">
+              Category
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowQuickAdd(!showQuickAdd)}
+              className="text-[10px] text-gold-500 hover:underline uppercase tracking-wider font-bold cursor-pointer"
+            >
+              {showQuickAdd ? "Cancel" : "+ Quick Create"}
+            </button>
+          </div>
+          {showQuickAdd ? (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newCatName}
+                onChange={(e) => setNewCatName(e.target.value)}
+                placeholder="Category Name"
+                className="flex-1 rounded-lg border border-cream-200 dark:border-espresso-750 px-3 py-1.5 bg-cream-50/30 dark:bg-espresso-950 outline-none text-xs"
+              />
+              <button
+                type="button"
+                onClick={handleQuickAdd}
+                disabled={quickAddLoading || !newCatName.trim()}
+                className="rounded-lg bg-gold-500 hover:bg-gold-600 text-white font-bold px-3 py-1.5 text-xs uppercase tracking-wider disabled:opacity-50 cursor-pointer"
+              >
+                Add
+              </button>
+            </div>
+          ) : (
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full rounded-lg border border-cream-200 dark:border-espresso-750 px-3 py-2 bg-cream-50/30 dark:bg-espresso-950 outline-none focus:border-gold-500 text-xs font-semibold text-chocolate-850 dark:text-espresso-50"
+            >
+              {categories.length === 0 && (
+                <option value="">No categories created</option>
+              )}
+              {categories.map((cat) => (
+                <option key={cat._id} value={cat._id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         <div>

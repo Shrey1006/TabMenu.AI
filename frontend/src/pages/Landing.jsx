@@ -174,7 +174,7 @@ export default function Landing() {
               to="/customer"
               className="rounded-lg border-2 border-gold-500 bg-[#120b08]/40 px-8 py-4 text-sm font-bold uppercase tracking-wider text-white hover:bg-gradient-to-r hover:from-gold-500 hover:to-gold-400 hover:border-transparent transition-all duration-300"
             >
-              Order Online / View Menu
+              Explore Menu
             </Link>
           </div>
         </div>
@@ -533,12 +533,12 @@ export default function Landing() {
             </div>
 
             <div className="mt-8 border-t border-cream-100 dark:border-espresso-800/80 pt-6 text-center">
-              <p className="text-xs text-chocolate-700 dark:text-espresso-100/70">Prefer to order to your table directly?</p>
+              <p className="text-xs text-chocolate-700 dark:text-espresso-100/70">Want to explore our delicacies before you visit?</p>
               <Link
                 to="/customer"
                 className="mt-2 inline-block text-xs font-bold uppercase tracking-wider text-gold-500 hover:text-gold-600 transition-colors"
               >
-                ⚡ Start Online Table Order →
+                📖 Explore Our Digital Menu →
               </Link>
             </div>
 

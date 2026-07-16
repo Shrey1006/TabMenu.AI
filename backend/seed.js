@@ -3,6 +3,7 @@ import { connectDB } from "./config/db.js";
 import User from "./models/User.js";
 import Table from "./models/Table.js";
 import MenuItem from "./models/MenuItem.js";
+import Category from "./models/Category.js";
 import { generateTableToken } from "./utils/crypto.js";
 
 dotenv.config();
@@ -182,7 +183,22 @@ const seed = async () => {
     User.deleteMany(),
     Table.deleteMany(),
     MenuItem.deleteMany(),
+    Category.deleteMany(),
   ]);
+
+  const categoriesData = [
+    { name: "Starters", displayOrder: 1, active: true },
+    { name: "Main Course", displayOrder: 2, active: true },
+    { name: "Breads", displayOrder: 3, active: true },
+    { name: "Desserts", displayOrder: 4, active: true },
+    { name: "Beverages", displayOrder: 5, active: true },
+  ];
+
+  const seededCategories = await Category.insertMany(categoriesData);
+  const categoryMap = {};
+  seededCategories.forEach((cat) => {
+    categoryMap[cat.name] = cat._id;
+  });
 
   await User.create([
     {
@@ -215,9 +231,16 @@ const seed = async () => {
     { tableNumber: 6, capacity: 8, status: "available", qrToken: generateTableToken(6) },
   ]);
 
-  await MenuItem.insertMany(menuItems);
+  const menuItemsToSeed = menuItems
+    .map((item) => ({
+      ...item,
+      category: categoryMap[item.category] || null,
+    }))
+    .filter((item) => item.category !== null);
 
-  console.log("Seed complete — demo accounts and tables initialized with valid tokens.");
+  await MenuItem.insertMany(menuItemsToSeed);
+
+  console.log("Seed complete — demo accounts, tables, and categories initialized with valid tokens.");
   process.exit(0);
 };
 

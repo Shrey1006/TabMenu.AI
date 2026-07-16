@@ -10,7 +10,6 @@ import MenuCard from "../components/MenuCard";
 import CategoryAccordion from "../components/CategoryAccordion";
 import CartDrawer from "../components/CartDrawer";
 import CheckoutModal from "../components/CheckoutModal";
-import PaymentSuccess from "../components/PaymentSuccess";
 
 function TableGuestApp({ qrToken, tableNumber }) {
   const socket = useSocket();
@@ -42,8 +41,6 @@ function TableGuestApp({ qrToken, tableNumber }) {
   // UI state
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOrderConfirmOpen, setIsOrderConfirmOpen] = useState(false);
-  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
-  const [paymentCompletedOrder, setPaymentCompletedOrder] = useState(null);
   const [feedback, setFeedback] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -228,7 +225,7 @@ function TableGuestApp({ qrToken, tableNumber }) {
       result = result.filter(
         (m) =>
           m.name.toLowerCase().includes(q) ||
-          m.category.toLowerCase().includes(q) ||
+          m.category?.name?.toLowerCase().includes(q) ||
           m.description.toLowerCase().includes(q)
       );
     }
@@ -247,8 +244,13 @@ function TableGuestApp({ qrToken, tableNumber }) {
     } else if (activeFilters.priceSort === "desc") {
       result.sort((a, b) => b.price - a.price);
     } else {
-      // Default to display order
-      result.sort((a, b) => a.displayOrder - b.displayOrder);
+      // Default to category displayOrder and then item displayOrder
+      result.sort((a, b) => {
+        const catA = a.category?.displayOrder ?? 0;
+        const catB = b.category?.displayOrder ?? 0;
+        if (catA !== catB) return catA - catB;
+        return a.displayOrder - b.displayOrder;
+      });
     }
 
     return result;
@@ -258,7 +260,7 @@ function TableGuestApp({ qrToken, tableNumber }) {
   const groupedMenu = useMemo(() => {
     const groups = {};
     filteredMenu.forEach((item) => {
-      const cat = item.category || "Other";
+      const cat = item.category?.name || "Other";
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(item);
     });
@@ -301,26 +303,7 @@ function TableGuestApp({ qrToken, tableNumber }) {
     }
   };
 
-  // Dine-in pay flow
-  const handlePaymentSuccess = async (paymentId, customerDetails) => {
-    if (!order) return;
-    setLoading(true);
-    setIsPaymentOpen(false);
-    try {
-      const { data: paidOrder } = await api.post(`/orders/${order._id}/pay`);
-      setPaymentCompletedOrder(paidOrder);
-      setOrder(null); // Clear active order
-      showToast("💳 Bill settled via Razorpay!");
-    } catch {
-      showToast("Failed to process payment settlement.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handlePaymentFailure = (errorMsg) => {
-    showToast(`❌ Payment Failed: ${errorMsg}. Please try again.`);
-  };
 
   const statusColor = {
     waiting_for_waiter: "bg-yellow-100 dark:bg-yellow-950/20 text-yellow-800 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-900/60",
@@ -409,16 +392,7 @@ function TableGuestApp({ qrToken, tableNumber }) {
       </header>
 
       {/* Success Page Container */}
-      <AnimatePresence>
-        {paymentCompletedOrder ? (
-          <div className="mx-auto max-w-4xl px-4 py-12 flex justify-center">
-            <PaymentSuccess
-              order={paymentCompletedOrder}
-              onClose={() => setPaymentCompletedOrder(null)}
-            />
-          </div>
-        ) : (
-          <div className="mx-auto max-w-4xl px-4 py-6 space-y-6">
+      <div className="mx-auto max-w-4xl px-4 py-6 space-y-6">
             
             {/* Waiter Request Alert */}
             {waiterRequest && (
@@ -531,14 +505,7 @@ function TableGuestApp({ qrToken, tableNumber }) {
                     >
                       🛎️ Call Waiter
                     </button>
-                    {order.status !== "paid" && (
-                      <button
-                        onClick={() => setIsPaymentOpen(true)}
-                        className="rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 hover:from-gold-600 hover:to-gold-500 text-white font-bold px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shadow-md"
-                      >
-                        💳 Pay Bill (Razorpay)
-                      </button>
-                    )}
+
                   </div>
                 </div>
               </motion.div>
@@ -682,8 +649,6 @@ function TableGuestApp({ qrToken, tableNumber }) {
             </div>
 
           </div>
-        )}
-      </AnimatePresence>
 
       {/* Floating View Basket Sticky Bar */}
       {cart.length > 0 && (
@@ -730,21 +695,7 @@ function TableGuestApp({ qrToken, tableNumber }) {
         onConfirmOrder={handleConfirmOrder}
       />
 
-      {/* 2. Checkout Payment Modal */}
-      <CheckoutModal
-        isOpen={isPaymentOpen}
-        onClose={() => setIsPaymentOpen(false)}
-        amount={
-          order
-            ? order.totalAmount +
-              Math.round(order.totalAmount * 0.05) + // GST
-              Math.round(order.totalAmount * 0.05) // Dine-in Service Charge
-            : 0
-        }
-        mode="payment"
-        onPaymentSuccess={handlePaymentSuccess}
-        onPaymentFailure={handlePaymentFailure}
-      />
+
 
     </div>
   );

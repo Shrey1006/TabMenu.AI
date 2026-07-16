@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 
-export default function MenuCard({ item, quantity = 0, onAdd, onRemove }) {
+export default function MenuCard({ item, quantity = 0, onAdd, onRemove, readOnly = false }) {
   const { name, description, price, category, image, veg, nonVeg, jain, available, bestseller, spiceLevel, prepTimeMinutes } = item;
 
   const spiceLabels = {
@@ -81,7 +81,7 @@ export default function MenuCard({ item, quantity = 0, onAdd, onRemove }) {
               {name}
             </h3>
             <p className="text-[10px] uppercase tracking-wider text-gold-500 font-semibold">
-              {category}
+              {category?.name || category}
             </p>
           </div>
           <span className="font-serif text-lg font-bold text-[#b69234]">
@@ -101,7 +101,11 @@ export default function MenuCard({ item, quantity = 0, onAdd, onRemove }) {
 
         {/* Action Button / Qty Selector */}
         <div className="pt-2">
-          {!available ? (
+          {readOnly ? (
+            <div className="w-full text-center py-2.5 text-[10px] font-bold text-gold-500 border border-dashed border-gold-500/35 rounded-xl bg-gold-500/5 select-none uppercase tracking-wider">
+              Order from Your Table
+            </div>
+          ) : !available ? (
             <button
               disabled
               className="w-full rounded-xl bg-stone-200 dark:bg-espresso-950 py-3 text-xs font-bold uppercase tracking-wider text-stone-400 dark:text-stone-600"

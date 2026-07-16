@@ -57,7 +57,7 @@ router.post("/", async (req, res) => {
 });
 
 // GET /api/waiter-requests/active - Get all active waiter requests
-router.get("/active", auth(["waiter", "admin"]), async (req, res) => {
+router.get("/active", auth(["waiter", "admin", "kitchen"]), async (req, res) => {
   try {
     const requests = await WaiterRequest.find({
       status: { $in: ["pending", "accepted", "on_the_way"] }
@@ -71,7 +71,7 @@ router.get("/active", auth(["waiter", "admin"]), async (req, res) => {
 });
 
 // PATCH /api/waiter-requests/:id/status - Update service request status
-router.patch("/:id/status", auth(["waiter", "admin"]), async (req, res) => {
+router.patch("/:id/status", auth(["waiter", "admin", "kitchen"]), async (req, res) => {
   const { status } = req.body;
   if (!["pending", "accepted", "on_the_way", "completed"].includes(status)) {
     return res.status(400).json({ message: "Invalid waiter request status" });
