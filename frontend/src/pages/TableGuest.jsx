@@ -47,28 +47,7 @@ function TableGuestApp({ qrToken, tableNumber }) {
   const [toastMsg, setToastMsg] = useState("");
 
   // Category Accordion open states
-  const [openCategories, setOpenCategories] = useState({
-    "Soup": true,
-    "Starters": true,
-    "Tanduri Starters": true,
-    "Chinese": true,
-    "Fried rice and Noodles": true,
-    "South Indian": true,
-    "Dosa and Uttapam": true,
-    "Breakfast Combo": true,
-    "Pav Bhaji": true,
-    "Burger and Sandwich": true,
-    "Pizza": true,
-    "Main Course": true,
-    "Breads": true,
-    "Rice & Biryani": true,
-    "Accompaniments": true,
-    "Beverages": true,
-    "Lassi": true,
-    "Milkshakes": true,
-    "Falooda": true,
-    "Desserts": true,
-  });
+  const [openCategories, setOpenCategories] = useState({});
 
   const showToast = (msg) => {
     setToastMsg(msg);
